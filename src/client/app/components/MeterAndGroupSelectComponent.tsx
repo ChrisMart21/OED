@@ -12,13 +12,16 @@ import makeAnimated from 'react-select/animated';
 import ReactTooltip from 'react-tooltip';
 import { Badge } from 'reactstrap';
 import { useAppDispatch, useAppSelector } from '../redux/reduxHooks';
+import { selectAnythingFetching } from '../redux/selectors/apiSelectors';
 import { selectMeterGroupSelectData } from '../redux/selectors/uiSelectors';
-import { updateSelectedMetersOrGroups } from '../redux/slices/graphSlice';
+import {
+	selectChartToRender, updateSelectedMetersOrGroups,
+	updateThreeDMeterOrGroupInfo
+} from '../redux/slices/graphSlice';
 import { GroupedOption, SelectOption } from '../types/items';
-import { MeterOrGroup } from '../types/redux/graph';
+import { ChartTypes, MeterOrGroup } from '../types/redux/graph';
 import translate from '../utils/translate';
 import TooltipMarkerComponent from './TooltipMarkerComponent';
-import { selectAnythingFetching } from '../redux/selectors/apiSelectors';
 /**
  * Creates a React-Select component for the UI Options Panel.
  * @param props - Helps differentiate between meter or group options
@@ -91,6 +94,8 @@ const MultiValueLabel = (props: MultiValueGenericProps<SelectOption, true, Group
 	// TODO Add meta data along chain? i.e. disabled due to chart type, area norm... etc. and display relevant message.
 	const isDisabled = typedProps.data.isDisabled;
 	// TODO Verify behavior, and set proper message/ translate
+	const dispatch = useAppDispatch();
+	const isThreeD = useAppSelector(state => selectChartToRender(state) === ChartTypes.threeD);
 	return (
 		< div ref={ref}
 			key={`${typedProps.data.value}:${typedProps.data.label}`}
@@ -101,6 +106,17 @@ const MultiValueLabel = (props: MultiValueGenericProps<SelectOption, true, Group
 				ReactTooltip.rebuild();
 				e.stopPropagation();
 				ref.current && ReactTooltip.show(ref.current);
+				//Emit threed
+				if (isThreeD) {
+					console.log('Dispatching threed');
+					dispatch(updateThreeDMeterOrGroupInfo(
+						{
+							meterOrGroupID: typedProps.data.value,
+							// will only ever be called with meter or group defined here.
+							meterOrGroup: typedProps.data.meterOrGroup!
+						}
+					));
+				}
 			}}
 			style={{ overflow: 'hidden' }}
 			onMouseEnter={e => {

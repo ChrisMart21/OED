@@ -45,6 +45,13 @@ export default function CreateMeterModalComponent() {
 
 	// Handlers for each type of input change
 	const [meterDetails, setMeterDetails] = useState(defaultValues);
+
+	// When Selecting no unit as unitId, reset
+	React.useEffect(() => {
+		if (meterDetails.unitId === -99) {
+			setMeterDetails(meterDetails => ({ ...meterDetails, defaultGraphicUnit: -999 }));
+		}
+	}, [meterDetails.unitId]);
 	const unitIsSelected = meterDetails.unitId !== -999;
 	const defaultGaphicUnitIsSelected = meterDetails.defaultGraphicUnit !== -999;
 

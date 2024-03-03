@@ -26,6 +26,11 @@ import ThreeDPillComponent from './ThreeDPillComponent';
 import Plot from 'react-plotly.js';
 import { selectSelectedLanguage } from '../redux/slices/appStateSlice';
 import Locales from '../types/locales';
+const stableEmtpyThreeDData: ThreeDReading = {
+	xData: [],
+	yData: [],
+	zData: []
+};
 
 /**
  * Component used to render 3D graphics
@@ -33,7 +38,7 @@ import Locales from '../types/locales';
  */
 export default function ThreeDComponent() {
 	const { args, shouldSkipQuery } = useAppSelector(selectThreeDQueryArgs);
-	const { data, isLoading: isFetching } = readingsApi.endpoints.threeD.useQuery(args, { skip: shouldSkipQuery });
+	const { data = stableEmtpyThreeDData, isLoading: isFetching } = readingsApi.endpoints.threeD.useQuery(args, { skip: shouldSkipQuery });
 	const meterDataById = useAppSelector(selectMeterDataById);
 	const groupDataById = useAppSelector(selectGroupDataById);
 	const unitDataById = useAppSelector(selectUnitDataById);

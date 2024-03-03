@@ -3,14 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createSelector } from '@reduxjs/toolkit';
-import {
-	selectThreeDMeterOrGroup, selectThreeDMeterOrGroupID
-} from '../slices/graphSlice';
 import { selectGroupDataById } from '../../redux/api/groupsApi';
+import { selectMeterDataById } from '../../redux/api/metersApi';
 import { MeterOrGroup } from '../../types/redux/graph';
 import { AreaUnitType } from '../../utils/getAreaUnitConversion';
-import { selectMeterDataById } from '../../redux/api/metersApi';
+import {
+	selectThreeDMeterOrGroup, selectThreeDMeterOrGroupID,
+	selectThreeDState
+} from '../slices/graphSlice';
 import { selectNameFromEntity } from './entitySelectors';
+import { createAppSelector } from './selectors';
+import { selectCompatibleSelectedMeters, selectCompatibleSelectedGroups } from './uiSelectors';
 
 
 // Memoized Selectors
@@ -41,5 +44,17 @@ export const selectThreeDComponentInfo = createSelector(
 			meterOrGroupName: meterOrGroupName,
 			isAreaCompatible: isAreaCompatible
 		};
+	}
+);
+
+
+export const selectThreeDLayout = createAppSelector(
+	[
+		selectCompatibleSelectedMeters,
+		selectCompatibleSelectedGroups,
+		selectThreeDState
+	],
+	(meters, groups, { meterOrGroupID, meterOrGroup, readingInterval }) => {
+		return undefined;
 	}
 );

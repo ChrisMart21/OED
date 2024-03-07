@@ -74,4 +74,5 @@ export interface GraphState {
 	threeD: ThreeDState;
 	queryTimeInterval: TimeInterval;
 	hotlinked: boolean;
+	selectedMap: number;
 }

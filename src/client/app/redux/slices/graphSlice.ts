@@ -21,6 +21,7 @@ import { preferencesApi } from '../api/preferencesApi';
 const defaultState: GraphState = {
 	selectedMeters: [],
 	selectedGroups: [],
+	selectedMap: 0,
 	selectedUnit: -99,
 	selectedAreaUnit: AreaUnitType.none,
 	queryTimeInterval: TimeInterval.unbounded(),
@@ -60,6 +61,9 @@ export const graphSlice = createSlice({
 	reducers: {
 		updateSelectedMeters: (state, action: PayloadAction<number[]>) => {
 			state.current.selectedMeters = action.payload;
+		},
+		updateSelectedMap: (state, action: PayloadAction<number>) => {
+			state.current.selectedMap = action.payload;
 		},
 		updateSelectedGroups: (state, action: PayloadAction<number[]>) => {
 			state.current.selectedGroups = action.payload;
@@ -366,6 +370,7 @@ export const graphSlice = createSlice({
 			});
 	},
 	selectors: {
+		selectSelectedMap: state => state.current.selectedMap,
 		selectGraphState: state => state.current,
 		selectPrevHistory: state => state.prev,
 		selectForwardHistory: state => state.next,
@@ -411,7 +416,7 @@ export const {
 	selectGraphAreaNormalization, selectSliderRangeInterval,
 	selectDefaultGraphState, selectHistoryIsDirty,
 	selectPlotlySliderMax, selectPlotlySliderMin,
-	selectMapBarWidthDays
+	selectMapBarWidthDays, selectSelectedMap
 } = graphSlice.selectors;
 
 // actionCreators exports
@@ -428,6 +433,7 @@ export const {
 	toggleAreaNormalization, updateThreeDMeterOrGroup,
 	changeCompareSortingOrder, updateThreeDMeterOrGroupID,
 	updateThreeDReadingInterval, updateThreeDMeterOrGroupInfo,
-	updateSelectedMetersOrGroups, updateMapsBarDuration
+	updateSelectedMetersOrGroups, updateMapsBarDuration,
+	updateSelectedMap
 } = graphSlice.actions;
 

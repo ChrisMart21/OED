@@ -154,7 +154,11 @@ export interface MapMetadata {
 	modifiedDate: string;
 	origin?: GPSPoint;
 	opposite?: GPSPoint;
+	// Migrating away from image in State
+	mapSource: string;
 	image: HTMLImageElement;
+	imgHeight: number;
+	imgWidth: number;
 	calibrationMode?: CalibrationModeTypes;
 	currentPoint?: CalibratedPoint;
 	calibrationSet?: CalibratedPoint[];
@@ -173,7 +177,7 @@ export interface CalibrationSettings {
 /**
  * @param mapID <= -1 means it's a new map;
  */
-interface MapMetadataByID extends Record<number, MapMetadata> { }
+export interface MapMetadataByID extends Record<number, MapMetadata> { }
 
 
 export interface MapState {

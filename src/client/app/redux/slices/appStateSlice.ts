@@ -3,9 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as moment from 'moment';
+import { processGraphLink } from '../../redux/actions/extraActions';
+import { mapsApi } from '../../redux/api/mapsApi';
 import { LanguageTypes } from '../../types/redux/i18n';
 import { deleteToken, getToken, hasToken } from '../../utils/token';
-import { fetchMapsDetails } from '../actions/map';
 import { authApi } from '../api/authApi';
 import { conversionsApi } from '../api/conversionsApi';
 import { groupsApi } from '../api/groupsApi';
@@ -16,7 +17,6 @@ import { userApi } from '../api/userApi';
 import { versionApi } from '../api/versionApi';
 import { createThunkSlice } from '../sliceCreators';
 import { currentUserSlice } from './currentUserSlice';
-import { processGraphLink } from '../../redux/actions/extraActions';
 
 export interface AppState {
 	initComplete: boolean;
@@ -53,7 +53,6 @@ export const appStateSlice = createThunkSlice({
 		}),
 		setChartLinkOptionsVisibility: create.reducer<boolean>((state, action) => {
 			state.chartLinkHideOptions = action.payload;
-
 		}),
 		initApp: create.asyncThunk(
 			// Thunk initiates many data fetching calls on startup before react begins to render
@@ -67,7 +66,7 @@ export const appStateSlice = createThunkSlice({
 				dispatch(conversionsApi.endpoints.getCikDetails.initiate());
 
 				// Older style thunk fetch cycle for maps until migration
-				dispatch(fetchMapsDetails());
+				// dispatch(fetchMapsDetails());
 
 				// If user is an admin, they receive additional meter details.
 				// To avoid sending duplicate requests upon startup, verify user then fetch
@@ -96,6 +95,7 @@ export const appStateSlice = createThunkSlice({
 				// Request meter/group/details post-auth
 				dispatch(metersApi.endpoints.getMeters.initiate());
 				dispatch(groupsApi.endpoints.getGroups.initiate());
+				dispatch(mapsApi.endpoints.getMapDetails.initiate());
 			},
 			{
 				settled: state => {

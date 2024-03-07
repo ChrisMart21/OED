@@ -4,12 +4,12 @@
 
 import * as moment from 'moment';
 import { selectShowMinMax } from '../../redux/slices/graphSlice';
-import { DataType } from '../../types/Datasources';
 import getGraphColor from '../../utils/getGraphColor';
 import translate from '../../utils/translate';
 import { createAppSelector } from './selectors';
 import { selectScalingFromEntity, selectNameFromEntity } from './entitySelectors';
 import { selectPlotlyMeterDeps, selectPlotlyGroupDeps, selectFromLineReadingsResult } from './plotlyDataSelectors';
+import { MeterOrGroup } from '../../types/redux/graph';
 
 type PlotlyLineDeps = ReturnType<typeof selectPlotlyMeterDeps> & { showMinMax: boolean }
 // Common deps + additional values needed to derive meter data in selectFromResult for plotly line chart
@@ -90,7 +90,7 @@ export const selectPlotlyMeterData = selectFromLineReadingsResult(
 					line: {
 						shape: 'spline',
 						width: 2,
-						color: getGraphColor(colorID, DataType.Meter)
+						color: getGraphColor(colorID, MeterOrGroup.meters)
 					}
 				} as Partial<Plotly.PlotData>;
 			});
@@ -138,7 +138,7 @@ export const selectPlotlyGroupData = selectFromLineReadingsResult(
 					line: {
 						shape: 'spline',
 						width: 2,
-						color: getGraphColor(colorID, DataType.Group)
+						color: getGraphColor(colorID, MeterOrGroup.groups)
 					}
 				} as Partial<Plotly.PlotData>;
 			});

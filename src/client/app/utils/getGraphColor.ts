@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { DataType } from '../types/Datasources';
+import { MeterOrGroup } from '../types/redux/graph';
 
 // Color list (47 colors) with darker hues towards beginning of array and lighter hues towards end of array.
 // The array length was made a prime number just in case the IDs are not ordered because it better scrambles
@@ -12,7 +12,7 @@ const graphColors = [
 	'#515a5a', '#7b241c', '#633974', '#1a5276', '#117864', '#196f3d', '#9a7d0a', '#935116',
 	'#283747', '#b03a2e', '#6c3483', '#2874a6', '#117a65', '#239b56', '#b9770e', '#a04000',
 	'#707b7c', '#a93226', '#884ea0', '#2471a3', '#17a589', '#229954', '#d4ac0d', '#ca6f1e',
-	'#34495e', '#e74c3c', '#8e44ad', '#3498db',	'#16a085', '#2ecc71', '#f39c12', '#d35400',
+	'#34495e', '#e74c3c', '#8e44ad', '#3498db', '#16a085', '#2ecc71', '#f39c12', '#d35400',
 	'#99a3a4', '#cd6155', '#af7ac5', '#5499c7', '#48c9b0', '#52be80', '#f4d03f'
 ];
 
@@ -33,16 +33,16 @@ const graphColorsReversed = [...graphColors].reverse();
  * @param type either 'DataType.Meter' or 'DataType.Group' depending on the type of the data to be graphed
  * @returns Hex color
  */
-export default function getGraphColor(colorID: number, type: DataType): string {
+export default function getGraphColor(colorID: number, type: MeterOrGroup): string {
 	// Shifts indices of positive IDs down by 1 since expect IDs to start at 1, and additionally maps unlikely
 	// negative IDs to positive indices (error-checking). This ensures the index is always positive.
 	let index = (colorID > 0) ? (colorID - 1) : (-colorID);
 
-	if (type === DataType.Meter) {
+	if (type === MeterOrGroup.meters) {
 		// Wrap color to lie within array for meters.
 		index = index % graphColorsReversed.length;
 		return graphColorsReversed[index];
-	} else if (type === DataType.Group) {
+	} else if (type === MeterOrGroup.groups) {
 		// Wrap color to lie with array for groups.
 		index = index % graphColors.length;
 		return graphColors[index];

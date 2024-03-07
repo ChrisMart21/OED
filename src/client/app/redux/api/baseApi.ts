@@ -21,7 +21,6 @@ export const baseApi = createApi({
 		},
 		// Default Behavior assumes all responses are json
 		// use content type because API responses are varied
-		// TODO Validate Behavior against all endpoints
 		responseHandler: 'content-type'
 	}),
 	// The types of tags that any injected endpoint may, provide, or invalidate.

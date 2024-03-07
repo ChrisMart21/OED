@@ -17,13 +17,13 @@ import {
 	selectAreaUnit, selectGraphAreaNormalization, selectLineGraphRate,
 	selectSelectedGroups, selectSelectedMeters, selectSelectedUnit
 } from '../redux/slices/graphSlice';
-import { DataType } from '../types/Datasources';
 import Locales from '../types/locales';
 import { AreaUnitType, getAreaUnitConversion } from '../utils/getAreaUnitConversion';
 import getGraphColor from '../utils/getGraphColor';
 import { lineUnitLabel } from '../utils/graphics';
 import translate from '../utils/translate';
 import SpinnerComponent from './SpinnerComponent';
+import { MeterOrGroup } from '../types/redux/graph';
 
 /**
  * @returns radar plotly component
@@ -119,7 +119,7 @@ export default function RadarChartComponent() {
 						line: {
 							shape: 'spline',
 							width: 2,
-							color: getGraphColor(colorID, DataType.Meter)
+							color: getGraphColor(colorID, MeterOrGroup.meters)
 						}
 					});
 				}
@@ -178,7 +178,7 @@ export default function RadarChartComponent() {
 						line: {
 							shape: 'spline',
 							width: 2,
-							color: getGraphColor(colorID, DataType.Meter)
+							color: getGraphColor(colorID, MeterOrGroup.groups)
 						}
 					});
 				}

@@ -21,6 +21,7 @@ import { UnitRepresentType } from '../../types/redux/units';
 import { barUnitLabel, lineUnitLabel } from '../../utils/graphics';
 import { createAppSelector } from './selectors';
 import { selectCompatibleSelectedGroups, selectCompatibleSelectedMeters } from './uiSelectors';
+import { selectMapDataById } from '../../redux/api/mapsApi';
 
 
 export const selectSelectedUnitData = (state: RootState) => selectUnitById(state, selectSelectedUnit(state));
@@ -77,6 +78,7 @@ export const selectCommonPlotlyDependencies = createStructuredSelector(
 		areaNormalization: selectGraphAreaNormalization,
 		meterDataById: selectMeterDataById,
 		groupDataById: selectGroupDataById,
+		mapDataById: selectMapDataById,
 		rateScaling: selectLineRateScaling,
 		needsRateScaling: selectLineNeedsRateScaling,
 		lineUnitLabel: selectLineUnitLabel,

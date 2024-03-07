@@ -2,8 +2,9 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import * as _ from 'lodash';
+import { sortBy } from 'lodash';
 import { selectGroupDataById } from '../../redux/api/groupsApi';
+import { selectMapById } from '../../redux/api/mapsApi';
 import { selectMeterDataById } from '../../redux/api/metersApi';
 import { selectUnitDataById } from '../../redux/api/unitsApi';
 import { selectChartLinkHideOptions } from '../../redux/slices/appStateSlice';
@@ -19,10 +20,9 @@ import {
 } from '../../utils/calibration';
 import { metersInGroup, unitsCompatibleWithMeters } from '../../utils/determineCompatibleUnits';
 import { AreaUnitType } from '../../utils/getAreaUnitConversion';
-import { selectMapState } from '../reducers/maps';
 import {
 	selectChartToRender, selectGraphAreaNormalization, selectGraphState,
-	selectSelectedGroups, selectSelectedMeters, selectSelectedUnit, selectSliderRangeInterval
+	selectSelectedGroups, selectSelectedMap, selectSelectedMeters, selectSelectedUnit, selectSliderRangeInterval
 } from '../slices/graphSlice';
 import { selectVisibleMetersAndGroups, selectVisibleUnitOrSuffixState } from './authVisibilitySelectors';
 import { selectDefaultGraphicUnitFromEntity, selectMeterOrGroupFromEntity, selectNameFromEntity } from './entitySelectors';
@@ -133,25 +133,23 @@ export const selectChartTypeCompatibility = createAppSelector(
 		selectChartToRender,
 		selectMeterDataById,
 		selectGroupDataById,
-		selectMapState
+		selectSelectedMap,
+		state => selectMapById(state, selectSelectedMap(state))
 	],
-	(areaCompat, chartToRender, meterDataById, groupDataById, mapState) => {
+	(areaCompat, chartToRender, meterDataById, groupDataById, selectedMap, mapData) => {
 		// Deep Copy previous selector's values, and update as needed based on current ChartType(s)
 		const compatibleMeters = new Set<number>(Array.from(areaCompat.compatibleMeters));
 		const incompatibleMeters = new Set<number>(Array.from(areaCompat.incompatibleMeters));
 
 		const compatibleGroups = new Set<number>(Array.from(areaCompat.compatibleGroups));
 		const incompatibleGroups = new Set<number>(Array.from(areaCompat.incompatibleGroups));
-
+		// console.log(mapState);
 		// ony run this check if we are displaying a map chart
-		if (chartToRender === ChartTypes.map && mapState.selectedMap !== 0) {
-			const mp = mapState.byMapID[mapState.selectedMap];
-			// filter meters;
-			const image = mp.image;
-			// The size of the original map loaded into OED.
+		if (chartToRender === ChartTypes.map && selectedMap !== 0) {
 			const imageDimensions: Dimensions = {
-				width: image.width,
-				height: image.height
+				// The size of the original map loaded into OED.
+				width: mapData.imgWidth,
+				height: mapData.imgHeight
 			};
 			// Determine the dimensions so within the Plotly coordinates on the user map.
 			const imageDimensionNormalized = normalizeImageDimensions(imageDimensions);
@@ -168,8 +166,8 @@ export const selectChartTypeCompatibility = createAppSelector(
 			// and upper, right corners of the user map.
 			// The gps value can be null from the database. Note using gps !== null to check for both null and undefined
 			// causes TS to complain about the unknown case so not used.
-			const origin = mp.origin;
-			const opposite = mp.opposite;
+			const origin = mapData.origin;
+			const opposite = mapData.opposite;
 			compatibleMeters.forEach(meterID => {
 				// This meter's GPS value.
 				const gps = meterDataById[meterID].gps;
@@ -177,10 +175,10 @@ export const selectChartTypeCompatibility = createAppSelector(
 					// Get the GPS degrees per unit of Plotly grid for x and y. By knowing the two corners
 					// (or really any two distinct points) you can calculate this by the change in GPS over the
 					// change in x or y which is the map's width & height in this case.
-					const scaleOfMap = calculateScaleFromEndpoints(origin, opposite, imageDimensionNormalized, mp.northAngle);
+					const scaleOfMap = calculateScaleFromEndpoints(origin, opposite, imageDimensionNormalized, mapData.northAngle);
 					// Convert GPS of meter to grid on user map. See calibration.ts for more info on this.
-					const meterGPSInUserGrid: CartesianPoint = gpsToUserGrid(imageDimensionNormalized, gps, origin, scaleOfMap, mp.northAngle);
-					if (!(itemMapInfoOk(meterID, DataType.Meter, mp, gps) &&
+					const meterGPSInUserGrid: CartesianPoint = gpsToUserGrid(imageDimensionNormalized, gps, origin, scaleOfMap, mapData.northAngle);
+					if (!(itemMapInfoOk(meterID, DataType.Meter, mapData, gps) &&
 						itemDisplayableOnMap(imageDimensionNormalized, meterGPSInUserGrid))) {
 						incompatibleMeters.add(meterID);
 					}
@@ -194,9 +192,9 @@ export const selectChartTypeCompatibility = createAppSelector(
 			compatibleGroups.forEach(groupID => {
 				const gps = groupDataById[groupID].gps;
 				if (origin !== undefined && opposite !== undefined && gps !== undefined && gps !== null) {
-					const scaleOfMap = calculateScaleFromEndpoints(origin, opposite, imageDimensionNormalized, mp.northAngle);
-					const groupGPSInUserGrid: CartesianPoint = gpsToUserGrid(imageDimensionNormalized, gps, origin, scaleOfMap, mp.northAngle);
-					if (!(itemMapInfoOk(groupID, DataType.Group, mp, gps) &&
+					const scaleOfMap = calculateScaleFromEndpoints(origin, opposite, imageDimensionNormalized, mapData.northAngle);
+					const groupGPSInUserGrid: CartesianPoint = gpsToUserGrid(imageDimensionNormalized, gps, origin, scaleOfMap, mapData.northAngle);
+					if (!(itemMapInfoOk(groupID, DataType.Group, mapData, gps) &&
 						itemDisplayableOnMap(imageDimensionNormalized, groupGPSInUserGrid))) {
 						incompatibleGroups.add(groupID);
 					}
@@ -410,8 +408,8 @@ export function getSelectOptionsByEntity(
 			} as SelectOption;
 		});
 
-	const compatible = _.sortBy(compatibleItemOptions, item => item.label.toLowerCase(), 'asc');
-	const incompatible = _.sortBy(incompatibleItemOptions, item => item.label.toLowerCase(), 'asc');
+	const compatible = sortBy(compatibleItemOptions, item => item.label.toLowerCase(), 'asc');
+	const incompatible = sortBy(incompatibleItemOptions, item => item.label.toLowerCase(), 'asc');
 	return { compatible, incompatible };
 }
 

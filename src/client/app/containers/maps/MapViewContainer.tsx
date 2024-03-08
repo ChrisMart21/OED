@@ -3,21 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { connect } from 'react-redux';
+import { selectMapById } from '../../redux/api/mapsApi';
+import { RootState } from '../../store';
 import MapViewComponent from '../../components/maps/MapViewComponent';
+import { editMapDetails, removeMap, setCalibration } from '../../redux/actions/map';
 import { Dispatch } from '../../types/redux/actions';
-import { State } from '../../types/redux/state';
-import {CalibrationModeTypes, MapMetadata} from '../../types/redux/map';
-import {editMapDetails, removeMap, setCalibration} from '../../redux/actions/map';
+import { CalibrationModeTypes, MapMetadata } from '../../types/redux/map';
 
-function mapStateToProps(state: State, ownProps: {id: number}) {
-	let map = state.maps.byMapID[ownProps.id];
-	if (state.maps.editedMaps[ownProps.id]) {
-		map = state.maps.editedMaps[ownProps.id];
-	}
+function mapStateToProps(state: RootState, ownProps: { id: number }) {
 	return {
-		map,
-		isEdited: state.maps.editedMaps[ownProps.id] !== undefined,
-		isSubmitting: state.maps.submitting.indexOf(ownProps.id) !== -1
+		map: selectMapById(state, ownProps.id),
+		isEdited: false,
+		// isEdited: state.maps.editedMaps[ownProps.id] !== undefined,
+		// isSubmitting: state.maps.submitting.indexOf(ownProps.id) !== -1
+		isSubmitting: false
 	};
 }
 

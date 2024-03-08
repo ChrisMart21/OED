@@ -9,7 +9,7 @@ import { useAppSelector } from '../redux/reduxHooks';
 import HeaderButtonsComponent from './HeaderButtonsComponent';
 import LogoComponent from './LogoComponent';
 import MenuModalComponent from './MenuModalComponent';
-import { selectDisplayTitle } from '../redux/slices/adminSlice';
+import { selectDisplayTitle } from '../redux/slices/adminPreferenceSlice';
 
 /**
  * React component that controls the header strip at the top of all pages

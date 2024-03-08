@@ -11,6 +11,9 @@ type LoginResponse = User & {
 	token: string
 };
 
+// Poll interval in milliseconds (1 minute)
+export const authPollInterval = 60000;
+
 export const authApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
 		login: builder.mutation<LoginResponse, { email: string, password: string }>({
@@ -53,6 +56,3 @@ export const authApi = baseApi.injectEndpoints({
 		})
 	})
 });
-
-// Poll interval in milliseconds (1 minute)
-export const authPollInterval = 60000;

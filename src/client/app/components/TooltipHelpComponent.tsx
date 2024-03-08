@@ -9,7 +9,7 @@ import '../styles/tooltip.css';
 import translate from '../utils/translate';
 import { useAppSelector } from '../redux/reduxHooks';
 import { selectOEDVersion } from '../redux/api/versionApi';
-import { selectBaseHelpUrl } from '../redux/slices/adminSlice';
+import { selectBaseHelpUrl } from '../redux/slices/adminPreferenceSlice';
 
 interface TooltipHelpProps {
 	page: string; // Specifies which page the tip is in.

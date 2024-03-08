@@ -25,12 +25,18 @@ type PlotlyMapDeps = ReturnType<typeof selectPlotlyMeterDeps> & {
 	mapData: MapMetadata
 }
 
-export const selectCurrentMapData = (state: RootState) => selectMapById(state, selectSelectedMap(state));
+// export const selectMapMetaData = (state: RootState) =>
+// 	selectMapById(state, selectSelectedMap(state));
+
+// Will use the id if provided, otherwise will return the selected map from graphslice.
+export const selectMapMetaData = (state: RootState, id: number | undefined = undefined): MapMetadata | undefined =>
+	id ? selectMapById(state, id) : selectMapById(state, selectSelectedMap(state));
+
 export const selectPlotlyMapDeps = createAppSelector(
 	[
 		selectPlotlyBarDeps,
 		selectMapBarWidthDays,
-		selectCurrentMapData
+		selectMapMetaData
 	],
 	({ barMeterDeps, barGroupDeps }, barDuration, mapData) => {
 		const meterDeps = { ...barMeterDeps, barDuration, mapData };
@@ -39,8 +45,24 @@ export const selectPlotlyMapDeps = createAppSelector(
 	}
 );
 
+export const selectMapImage = createAppSelector(
+	[
+		(state, id: number | undefined = undefined) => selectMapMetaData(state, id)
+	],
+	mapData => {
+		if (mapData?.mapSource) {
+			const img = new Image();
+			img.src = mapData.mapSource;
+			return img;
+		} else {
+			return undefined;
+		}
+	}
+);
 export const selectMapLayout = createAppSelector(
-	[selectCurrentMapData],
+	[
+		selectMapMetaData
+	],
 	mapData => ({
 		// Either the actual map name or text to say it is not available.
 		title: {

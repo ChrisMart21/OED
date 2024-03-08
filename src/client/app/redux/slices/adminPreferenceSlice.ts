@@ -4,7 +4,8 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import * as moment from 'moment';
-import { createAppSelector } from '../../redux/selectors/selectors';
+import { selectOEDVersion } from '../api/versionApi';
+import { createAppSelector } from '../selectors/selectors';
 import { PreferenceRequestItem } from '../../types/items';
 import { AdminState } from '../../types/redux/admin';
 import { ChartTypes } from '../../types/redux/graph';
@@ -12,16 +13,13 @@ import { LanguageTypes } from '../../types/redux/i18n';
 import { durationFormat } from '../../utils/durationFormat';
 import { AreaUnitType } from '../../utils/getAreaUnitConversion';
 import { preferencesApi } from '../api/preferencesApi';
-import { selectOEDVersion } from '../../redux/api/versionApi';
 
-export const defaultAdminState: AdminState = {
+export const defaultAdminPreferences: AdminState = {
 	displayTitle: '',
 	defaultChartToRender: ChartTypes.line,
 	defaultBarStacking: false,
 	defaultTimezone: '',
 	defaultLanguage: LanguageTypes.en,
-	isFetching: false,
-	submitted: true,
 	defaultWarningFileSize: 5,
 	defaultFileSizeLimit: 25,
 	isUpdatingCikAndDBViews: false,
@@ -38,110 +36,85 @@ export const defaultAdminState: AdminState = {
 	defaultHelpUrl: ''
 };
 
-export const adminSlice = createSlice({
-	name: 'admin',
-	initialState: defaultAdminState,
+export const adminPreference = createSlice({
+	name: 'adminPreference',
+	initialState: defaultAdminPreferences,
 	reducers: {
 		updateDisplayTitle: (state, action: PayloadAction<string>) => {
 			state.displayTitle = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultChartToRender: (state, action: PayloadAction<ChartTypes>) => {
 			state.defaultChartToRender = action.payload;
-			state.submitted = false;
 		},
 		toggleDefaultBarStacking: state => {
 			state.defaultBarStacking = !state.defaultBarStacking;
-			state.submitted = false;
 		},
 		toggleDefaultAreaNormalization: state => {
 			state.defaultAreaNormalization = !state.defaultAreaNormalization;
-			state.submitted = false;
 		},
 		updateDefaultAreaUnit: (state, action: PayloadAction<AreaUnitType>) => {
 			state.defaultAreaUnit = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultTimezone: (state, action: PayloadAction<string>) => {
 			state.defaultTimezone = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultLanguage: (state, action: PayloadAction<LanguageTypes>) => {
 			state.defaultLanguage = action.payload;
-			state.submitted = false;
-		},
-		requestPreferences: state => {
-			state.isFetching = true;
 		},
 		receivePreferences: (state, action: PayloadAction<PreferenceRequestItem>) => {
 			state = {
 				...state,
-				isFetching: false,
 				...action.payload,
 				defaultMeterReadingFrequency: durationFormat(action.payload.defaultMeterReadingFrequency)
 			};
 		},
-		markPreferencesNotSubmitted: state => {
-			state.submitted = false;
-		},
-		markPreferencesSubmitted: (state, action: PayloadAction<string>) => {
-			state.defaultMeterReadingFrequency = durationFormat(action.payload);
-			state.submitted = true;
-		},
 		updateDefaultWarningFileSize: (state, action: PayloadAction<number>) => {
 			state.defaultWarningFileSize = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultFileSizeLimit: (state, action: PayloadAction<number>) => {
 			state.defaultFileSizeLimit = action.payload;
-			state.submitted = false;
 		},
 		toggleWaitForCikAndDB: state => {
 			state.isUpdatingCikAndDBViews = !state.isUpdatingCikAndDBViews;
 		},
 		updateDefaultMeterReadingFrequency: (state, action: PayloadAction<string>) => {
 			state.defaultMeterReadingFrequency = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultMeterMinimumValue: (state, action: PayloadAction<number>) => {
 			state.defaultMeterMinimumValue = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultMeterMaximumValue: (state, action: PayloadAction<number>) => {
 			state.defaultMeterMaximumValue = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultMeterMinimumDate: (state, action: PayloadAction<string>) => {
 			state.defaultMeterMinimumDate = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultMeterMaximumDate: (state, action: PayloadAction<string>) => {
 			state.defaultMeterMaximumDate = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultMeterReadingGap: (state, action: PayloadAction<number>) => {
 			state.defaultMeterReadingGap = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultMeterMaximumErrors: (state, action: PayloadAction<number>) => {
 			state.defaultMeterMaximumErrors = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultMeterDisableChecks: (state, action: PayloadAction<boolean>) => {
 			state.defaultMeterDisableChecks = action.payload;
-			state.submitted = false;
 		},
 		updateDefaultHelpUrl: (state, action: PayloadAction<string>) => {
 			state.defaultHelpUrl = action.payload;
-			state.submitted = false;
 		}
 	},
 	extraReducers: builder => {
-		builder.addMatcher(preferencesApi.endpoints.getPreferences.matchFulfilled, (state, action) => ({
-			...state,
-			...action.payload,
-			defaultMeterReadingFrequency: durationFormat(action.payload.defaultMeterReadingFrequency)
-		}));
+		builder.addMatcher(
+			preferencesApi.endpoints.getPreferences.matchFulfilled,
+			(state, action) => {
+				adminPreference.caseReducers.receivePreferences(
+					state,
+					adminPreference.actions.receivePreferences(action.payload)
+				);
+			}
+		);
 	},
 	selectors: {
 		selectAdminState: state => state,
@@ -166,13 +139,13 @@ export const {
 	updateDefaultMeterReadingGap,
 	updateDefaultMeterMaximumErrors,
 	updateDefaultMeterDisableChecks
-} = adminSlice.actions;
+} = adminPreference.actions;
 
 export const {
 	selectAdminState,
 	selectDisplayTitle,
 	selectBaseHelpUrl
-} = adminSlice.selectors;
+} = adminPreference.selectors;
 
 
 export const selectAdminPreferences = createAppSelector(

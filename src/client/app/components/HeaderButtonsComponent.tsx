@@ -12,7 +12,7 @@ import { clearGraphHistory } from '../redux/actions/extraActions';
 import { authApi } from '../redux/api/authApi';
 import { selectOEDVersion } from '../redux/api/versionApi';
 import { useAppDispatch, useAppSelector } from '../redux/reduxHooks';
-import { selectHelpUrl } from '../redux/slices/adminSlice';
+import { selectHelpUrl } from '../redux/slices/adminPreferenceSlice';
 import { selectOptionsVisibility, toggleOptionsVisibility } from '../redux/slices/appStateSlice';
 import { selectHasRolePermissions, selectIsAdmin, selectIsLoggedIn } from '../redux/slices/currentUserSlice';
 import { UserRole } from '../types/items';

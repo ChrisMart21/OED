@@ -48,12 +48,12 @@ export default function MetersDetailComponent() {
 					<div className="card-container">
 						{/* Create a MeterViewComponent for each MeterData in Meters State */}
 						{Object.values(visibleMeters)
-							.map(MeterData => (
+							.map(MeterData =>
 								<MeterViewComponent
 									key={`${MeterData.id}:${MeterData.identifier}`}
 									meter={MeterData}
 								/>
-							))}
+							)}
 					</div>
 				}
 			</div>

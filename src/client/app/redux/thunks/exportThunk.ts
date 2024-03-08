@@ -12,7 +12,7 @@ import { selectBarChartQueryArgs, selectLineChartQueryArgs } from '../../redux/s
 import { selectNameFromEntity, selectScalingFromEntity } from '../../redux/selectors/entitySelectors';
 import { selectLineChartDeps } from '../../redux/selectors/lineChartSelectors';
 import { selectBarUnitLabel, selectLineUnitLabel, selectPlotlyMeterDeps } from '../../redux/selectors/plotlyDataSelectors';
-import { selectAdminState } from '../../redux/slices/adminSlice';
+import { selectAdminState } from '../slices/adminPreferenceSlice';
 import { selectHasRolePermissions } from '../../redux/slices/currentUserSlice';
 import { selectChartToRender, selectQueryTimeInterval, selectSelectedMeters, selectSelectedUnit } from '../../redux/slices/graphSlice';
 import { UserRole } from '../../types/items';

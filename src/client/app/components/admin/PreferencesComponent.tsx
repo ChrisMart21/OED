@@ -15,7 +15,7 @@ import { AreaUnitType } from '../../utils/getAreaUnitConversion';
 import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import translate from '../../utils/translate';
 import TimeZoneSelect from '../TimeZoneSelect';
-import { defaultAdminState } from '../../redux/slices/adminSlice';
+import { defaultAdminPreferences } from '../../redux/slices/adminPreferenceSlice';
 
 
 // TODO: Add warning for invalid data
@@ -23,7 +23,7 @@ import { defaultAdminState } from '../../redux/slices/adminSlice';
  * @returns Preferences Component for Administrative use
  */
 export default function PreferencesComponent() {
-	const { data: adminPreferences = defaultAdminState } = preferencesApi.useGetPreferencesQuery();
+	const { data: adminPreferences = defaultAdminPreferences } = preferencesApi.useGetPreferencesQuery();
 	const [localAdminPref, setLocalAdminPref] = React.useState<PreferenceRequestItem>(_.cloneDeep(adminPreferences));
 	const [submitPreferences] = preferencesApi.useSubmitPreferencesMutation();
 	const [hasChanges, setHasChanges] = React.useState<boolean>(false);

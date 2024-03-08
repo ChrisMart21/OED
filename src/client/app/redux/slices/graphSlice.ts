@@ -292,8 +292,6 @@ export const graphSlice = createSlice({
 				({ current }, { payload }) => {
 					current.hotlinked = true;
 					payload.forEach((value, key) => {
-						// TODO Needs to be refactored into a single dispatch/reducer pair.
-						// It is a best practice to reduce the number of dispatch calls, so this logic should be converted into a single reducer for the graphSlice
 						// TODO validation could be implemented across all cases similar to compare period and sorting order
 						switch (key) {
 							case 'areaNormalization':

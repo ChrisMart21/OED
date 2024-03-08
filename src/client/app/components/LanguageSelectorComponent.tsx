@@ -9,7 +9,7 @@ import { selectSelectedLanguage, updateSelectedLanguage } from '../redux/slices/
 import { selectOEDVersion } from '../redux/api/versionApi';
 import { useAppDispatch, useAppSelector } from '../redux/reduxHooks';
 import { LanguageTypes } from '../types/redux/i18n';
-import { selectBaseHelpUrl } from '../redux/slices/adminSlice';
+import { selectBaseHelpUrl } from '../redux/slices/adminPreferenceSlice';
 
 /**
  * A component that allows users to select which language the page should be displayed in.

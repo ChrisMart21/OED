@@ -6,7 +6,7 @@ import * as _ from 'lodash';
 import * as moment from 'moment';
 import * as React from 'react';
 import Plot from 'react-plotly.js';
-import { selectCurrentMapData, selectMapLayout } from '../redux/selectors/mapsSelectors';
+import { selectMapMetaData, selectMapLayout } from '../redux/selectors/mapsSelectors';
 import { selectGroupDataById } from '../redux/api/groupsApi';
 import { selectMeterDataById } from '../redux/api/metersApi';
 import { readingsApi } from '../redux/api/readingsApi';
@@ -53,7 +53,7 @@ export default function MapChartComponent() {
 	const unitDataById = useAppSelector(selectUnitDataById);
 	const groupDataById = useAppSelector(selectGroupDataById);
 	const meterDataById = useAppSelector(selectMeterDataById);
-	const map = useAppSelector(selectCurrentMapData);
+	const map = useAppSelector(selectMapMetaData);
 	const layout = useAppSelector(selectMapLayout);
 
 	// RTK Types Disagree with maps ts types so, use old until migration completer for maps.

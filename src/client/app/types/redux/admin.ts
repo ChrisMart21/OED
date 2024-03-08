@@ -13,8 +13,6 @@ export interface AdminState {
 	defaultBarStacking: boolean;
 	defaultTimezone: string;
 	defaultLanguage: LanguageTypes;
-	isFetching: boolean;
-	submitted: boolean;
 	defaultWarningFileSize: number;
 	defaultFileSizeLimit: number;
 	isUpdatingCikAndDBViews: boolean;

@@ -4,16 +4,18 @@
 
 import { combineReducers } from 'redux';
 import { baseApi } from './api/baseApi';
-import { adminSlice } from './slices/adminSlice';
+import { adminPreference } from './slices/adminPreferenceSlice';
 import { appStateSlice } from './slices/appStateSlice';
 import { currentUserSlice } from './slices/currentUserSlice';
 import { graphSlice } from './slices/graphSlice';
 import maps from './reducers/maps';
+import { localEditsSlice } from './slices/localEditsSlice';
 
 export const rootReducer = combineReducers({
 	appState: appStateSlice.reducer,
 	graph: graphSlice.reducer,
-	admin: adminSlice.reducer,
+	adminPreference: adminPreference.reducer,
+	localEdits: localEditsSlice.reducer,
 	currentUser: currentUserSlice.reducer,
 	// RTK Query's Derived Reducers
 	[baseApi.reducerPath]: baseApi.reducer,

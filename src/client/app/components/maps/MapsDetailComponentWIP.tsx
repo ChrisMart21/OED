@@ -6,12 +6,12 @@ import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Link } from 'react-router-dom';
 import { Button } from 'reactstrap';
+import AdminLocalEditsComponent from '../admin/AdminLocalEditsComponent';
 import { selectMapIds } from '../../redux/api/mapsApi';
 import { useAppSelector } from '../../redux/reduxHooks';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import { MapViewComponent } from './MapViewComponentWIP';
-import AdminModalComponent from '../../components/admin/AdminModalComponent';
 
 
 /**
@@ -19,17 +19,12 @@ import AdminModalComponent from '../../components/admin/AdminModalComponent';
  * @returns maps detail component
  */
 export default function MapsDetailComponent() {
+	// const dispatch = useAppDispatch();
 	const mapIds = useAppSelector(selectMapIds);
-	const [isOpen, setIsOpen] = React.useState(false);
-	const [idToEdit, setIdToEdit] = React.useState(0);
-	const openModalForID = (id: number) => {
-		setIdToEdit(id);
-		setIsOpen(true);
-	};
 
 	return (
 		<>
-			<AdminModalComponent id={idToEdit} modalState={[isOpen, setIsOpen]} />
+			<AdminLocalEditsComponent />
 			<div className='flexGrowOne'>
 				<TooltipHelpComponent page='maps' />
 				<div className='container-fluid'>
@@ -53,7 +48,7 @@ export default function MapsDetailComponent() {
 					</Button>
 					<div style={tableStyle}>
 						{
-							mapIds.map(mapID => <MapViewComponent key={mapID} id={mapID} editMap={openModalForID} />)
+							mapIds.map(mapID => <MapViewComponent key={mapID} id={mapID} />)
 						}
 						{/* <Table striped bordered hover>
 						<thead>

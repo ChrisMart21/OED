@@ -4,15 +4,15 @@
 
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
-import TooltipHelpComponent from '../TooltipHelpComponent';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../redux/reduxHooks';
-import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
 import { selectVisibleMeterAndGroupData } from '../../redux/selectors/adminSelectors';
+import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
 import '../../styles/card-page.css';
+import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import CreateMeterModalComponent from './CreateMeterModalComponent';
 import MeterViewComponent from './MeterViewComponent';
-import { authApi, authPollInterval } from '../../redux/api/authApi';
 
 /**
  * Defines the meters page card view
@@ -20,16 +20,20 @@ import { authApi, authPollInterval } from '../../redux/api/authApi';
  */
 export default function MetersDetailComponent() {
 
+
+
 	// Check for admin status
 	const isAdmin = useAppSelector(selectIsAdmin);
-	// page may contain admin info so verify admin status while admin is authenticated.
-	authApi.useTokenPollQuery(undefined, { skip: !isAdmin, pollingInterval: authPollInterval });
+	const { pathname } = useLocation();
 	// We only want displayable meters if non-admins because they still have
 	// non-displayable in state.
 	const { visibleMeters } = useAppSelector(selectVisibleMeterAndGroupData);
 
-	return (
-		<div className='flexGrowOne'>
+	// meters/admin uses the same page, but  AmindOutlet is a child of AdminOutlet.
+	// This allows for inheritance of admin specific behaviors of AdminOutlet children.
+	return isAdmin && pathname !== '/meters/admin'
+		? <Navigate to='/meters/admin' replace />
+		: <div className='flexGrowOne'>
 			<TooltipHelpComponent page='meters' />
 
 			<div className='container-fluid'>
@@ -57,8 +61,7 @@ export default function MetersDetailComponent() {
 					</div>
 				}
 			</div>
-		</div >
-	);
+		</div >;
 }
 
 const titleStyle: React.CSSProperties = {

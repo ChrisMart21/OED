@@ -48,12 +48,14 @@ const router = createBrowserRouter([
 		children: [
 			{ index: true, element: <HomeComponent /> },
 			{ path: 'login', element: <LoginComponent /> },
-			{ path: 'groups', element: <GroupsDetailComponent /> },
-			{ path: 'meters', element: <MetersDetailComponent /> },
 			{ path: 'graph', element: <GraphLink /> },
+			{ path: 'meters', element: <MetersDetailComponent /> },
+			{ path: 'groups', element: <GroupsDetailComponent /> },
 			{
 				element: <AdminOutlet />,
 				children: [
+					{ path: 'meters/admin', element: <MetersDetailComponent /> },
+					{ path: 'groups/admin', element: <GroupsDetailComponent /> },
 					{ path: 'admin', element: <AdminComponent /> },
 					{ path: 'calibration', element: <MapCalibrationContainer /> },
 					{ path: 'maps', element: <MapsDetailComponent /> },

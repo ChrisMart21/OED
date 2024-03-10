@@ -1,21 +1,20 @@
 import * as React from 'react';
 import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
+import { selectIdToEdit, selectIsOpen, toggleIsOpen } from '../../redux/slices/localEditsSlice';
 import { selectMapMetaData } from '../../redux/selectors/mapsSelectors';
-import { EntityType } from '../../redux/slices/localEditsSlice';
 
-const AdminModalComponent = (props: {
-	id: number;
-	modalState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
-}) => {
-	const [isOpen, setIsOpen] = props.modalState;
-	const toggle = () => setIsOpen(open => !open);
-	const mapData = useAppSelector(state => selectMapMetaData(state, props.id));
+const AdminLocalEditsComponent = () => {
 	const dispatch = useAppDispatch();
+	const isOpen = useAppSelector(selectIsOpen);
+	const idToEdit = useAppSelector(selectIdToEdit);
+	const mapData = useAppSelector(state => selectMapMetaData(state, idToEdit));
+	const toggle = React.useCallback(() => dispatch(toggleIsOpen()), []);
+	console.log('idToEdit', idToEdit,'mapData', mapData);
 	return (
-		mapData &&
+		// mapData &&
 		<Modal isOpen={isOpen} toggle={toggle} size='xl'>
-			<ModalHeader toggle={toggle}>{mapData.name}</ModalHeader>
+			<ModalHeader toggle={toggle}>Hello,Modal!</ModalHeader>
 			<ModalBody>
 				Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
 				eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
@@ -26,11 +25,13 @@ const AdminModalComponent = (props: {
 				culpa qui officia deserunt mollit anim id est laborum.
 			</ModalBody>
 			<ModalFooter>
-				<Button color="primary" onClick={()=> mapData && dispatch(setEdit({
-					type: EntityType.MAP, changes: mapData,
-				}))}>
+				{/* <Button color="primary"
+					onClick={() => mapData && dispatch(
+						setEdits({ type: EntityType.MAP, data: mapData }))
+					}
+				>
 					Do Something
-				</Button>{' '}
+				</Button> */}
 				<Button color="secondary" onClick={toggle}>
 					Cancel
 				</Button>
@@ -39,4 +40,4 @@ const AdminModalComponent = (props: {
 	);
 };
 
-export default AdminModalComponent;
+export default AdminLocalEditsComponent;

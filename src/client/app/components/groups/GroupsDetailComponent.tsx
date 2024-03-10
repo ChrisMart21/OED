@@ -4,14 +4,14 @@
 
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
-import TooltipHelpComponent from '../TooltipHelpComponent';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../redux/reduxHooks';
-import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
 import { selectVisibleMeterAndGroupData } from '../../redux/selectors/adminSelectors';
+import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
+import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import CreateGroupModalComponent from './CreateGroupModalComponent';
 import GroupViewComponent from './GroupViewComponent';
-import { authApi, authPollInterval } from '../../redux/api/authApi';
 
 /**
  * Defines the groups page card view
@@ -20,9 +20,7 @@ import { authApi, authPollInterval } from '../../redux/api/authApi';
 export default function GroupsDetailComponent() {
 	// Check for admin status
 	const isAdmin = useAppSelector(state => selectIsAdmin(state));
-
-	// page may contain admin info so verify admin status while admin is authenticated.
-	authApi.useTokenPollQuery(undefined, { skip: !isAdmin, pollingInterval: authPollInterval });
+	const { pathname } = useLocation();
 
 	// We only want displayable groups if non-admins because they still have non-displayable in state.
 	const { visibleGroups } = useAppSelector(state => selectVisibleMeterAndGroupData(state));
@@ -38,8 +36,11 @@ export default function GroupsDetailComponent() {
 		tooltipGroupView: isAdmin ? 'help.admin.groupview' : 'help.groups.groupview'
 	};
 
-	return (
-		<div className='flexGrowOne'>
+	// groups/admin uses the same component, the only difference being it is a child of AmindOutlet.
+	// This allows for inheritance of other admin specific behaviors of AdminOutlet children.
+	return isAdmin && pathname !== '/groups/admin'
+		? <Navigate to='/groups/admin' replace />
+		: <div className='flexGrowOne'>
 			<TooltipHelpComponent page='groups' />
 
 			<div className='container-fluid'>
@@ -65,6 +66,5 @@ export default function GroupsDetailComponent() {
 					</div>
 				}
 			</div>
-		</div>
-	);
+		</div>;
 }

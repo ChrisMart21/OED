@@ -10,7 +10,7 @@ import { useAppSelector } from '../../redux/reduxHooks';
 import { selectMapMetaData } from '../../redux/selectors/mapsSelectors';
 
 
-export const MapViewComponent = (props: { id: number; editMap: (id: number) => void }) => {
+export const MapViewComponent = (props: { id: number; }) => {
 	const mapData = useAppSelector(state => selectMapMetaData(state, props.id));
 	const translate = useTranslate();
 
@@ -41,7 +41,7 @@ export const MapViewComponent = (props: { id: number; editMap: (id: number) => v
 				</Row>
 				<Row>
 					<Col>
-						<Button color="secondary" onClick={() => props.editMap(props.id)}>{translate('edit')}</Button>
+						<Button color="secondary" onClick={() => {}}>{translate('edit')}</Button>
 					</Col>
 				</Row>
 			</CardBody>

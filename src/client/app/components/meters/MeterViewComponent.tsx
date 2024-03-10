@@ -3,19 +3,18 @@
 	* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as React from 'react';
-import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'reactstrap';
-import { MeterData } from 'types/redux/meters';
-import { useAppSelector } from '../../redux/reduxHooks';
+import { selectMeterById } from '../../redux/api/metersApi';
+import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
 import { selectGraphicName, selectUnitName } from '../../redux/selectors/adminSelectors';
+import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
+import { setIdToEdit } from '../../redux/slices/localEditsSlice';
 import '../../styles/card-page.css';
 import translate from '../../utils/translate';
-import EditMeterModalComponent from './EditMeterModalComponent';
-import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
 
 interface MeterViewComponentProps {
-	meter: MeterData;
+	meterId: number;
 }
 
 /**
@@ -24,32 +23,30 @@ interface MeterViewComponentProps {
  * @returns Meter info card element
  */
 export default function MeterViewComponent(props: MeterViewComponentProps) {
-	// Edit Modal Show
-	const [showEditModal, setShowEditModal] = useState(false);
+	const { meterId } = props;
 	// Check for admin status
 	const loggedInAsAdmin = useAppSelector(selectIsAdmin);
+	const meterData = useAppSelector(state => selectMeterById(state, meterId));
+
+	const dispatch = useAppDispatch();
+	const toggleModal = React.useCallback(() => dispatch(setIdToEdit(meterId)), [meterId]);
 
 
 	// Set up to display the units associated with the meter as the unit identifier.
 	// This is the unit associated with the meter.
-	const unitName = useAppSelector(state => selectUnitName(state, props.meter.id));
+	const unitName = useAppSelector(state => selectUnitName(state, meterData.id));
 	// This is the default graphic unit  name associated with the meter.
-	const graphicName = useAppSelector(state => selectGraphicName(state, props.meter.id));
-	const handleShow = () => {
-		setShowEditModal(true);
-	};
-	const handleClose = () => {
-		setShowEditModal(false);
-	};
+	const graphicName = useAppSelector(state => selectGraphicName(state, meterData.id));
+
 	// Only display limited data if not an admin.
 	return (
 		<div className="card">
 			<div className="identifier-container">
-				{props.meter.identifier}
+				{meterData.identifier}
 			</div>
 			{loggedInAsAdmin &&
 				<div className="item-container">
-					<b><FormattedMessage id="name" /></b> {props.meter.name}
+					<b><FormattedMessage id="name" /></b> {meterData.name}
 				</div>
 			}
 			<div className="item-container">
@@ -60,31 +57,25 @@ export default function MeterViewComponent(props: MeterViewComponentProps) {
 			</div>
 			{loggedInAsAdmin &&
 				<div className="item-container">
-					<b><FormattedMessage id="meter.enabled" /></b> {translate(`TrueFalseType.${props.meter.enabled.toString()}`)}
+					<b><FormattedMessage id="meter.enabled" /></b> {translate(`TrueFalseType.${meterData.enabled.toString()}`)}
 				</div>
 			}
 			{loggedInAsAdmin &&
-				<div className={props.meter.displayable.toString()}>
-					<b><FormattedMessage id="displayable" /></b> {translate(`TrueFalseType.${props.meter.displayable.toString()}`)}
+				<div className={meterData.displayable.toString()}>
+					<b><FormattedMessage id="displayable" /></b> {translate(`TrueFalseType.${meterData.displayable.toString()}`)}
 				</div>
 			}
 			{loggedInAsAdmin &&
 				<div className="item-container">
 					{/* Only show first 30 characters so card does not get too big. Should limit to one line. Check in case null. */}
-					<b><FormattedMessage id="note" /></b> {props.meter.note?.slice(0, 29)}
+					<b><FormattedMessage id="note" /></b> {meterData.note?.slice(0, 29)}
 				</div>
 			}
 			{loggedInAsAdmin &&
 				<div className="edit-btn">
-					<Button color='secondary' onClick={handleShow}>
+					<Button color='secondary' onClick={toggleModal}>
 						<FormattedMessage id="edit.meter" />
 					</Button>
-					{/* Creates a child MeterModalEditComponent */}
-					<EditMeterModalComponent
-						show={showEditModal}
-						meter={props.meter}
-						handleClose={handleClose}
-					/>
 				</div>
 			}
 		</div>

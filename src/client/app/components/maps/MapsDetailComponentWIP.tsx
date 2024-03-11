@@ -6,7 +6,6 @@ import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Link } from 'react-router-dom';
 import { Button } from 'reactstrap';
-import AdminLocalEditsComponent from '../admin/AdminLocalEditsComponent';
 import { selectMapIds } from '../../redux/api/mapsApi';
 import { useAppSelector } from '../../redux/reduxHooks';
 import TooltipHelpComponent from '../TooltipHelpComponent';
@@ -24,7 +23,6 @@ export default function MapsDetailComponent() {
 
 	return (
 		<>
-			<AdminLocalEditsComponent />
 			<div className='flexGrowOne'>
 				<TooltipHelpComponent page='maps' />
 				<div className='container-fluid'>
@@ -50,31 +48,6 @@ export default function MapsDetailComponent() {
 						{
 							mapIds.map(mapID => <MapViewComponent key={mapID} id={mapID} />)
 						}
-						{/* <Table striped bordered hover>
-						<thead>
-							<tr>
-								<th> <FormattedMessage id='map.id' /> </th>
-								<th> <FormattedMessage id='map.name' /> </th>
-								{isAdmin &&
-									<>
-										<th> <FormattedMessage id='map.displayable' /> </th>
-										<th> <FormattedMessage id='map.circle.size' /> </th>
-										<th> <FormattedMessage id='map.modified.date' /> </th>
-										<th> <FormattedMessage id='map.filename' /> </th>
-										<th> <FormattedMessage id='note' /> </th>
-										<th> <FormattedMessage id='map.calibration' /> </th>
-										<th> <FormattedMessage id='remove' /> </th>
-									</>
-								}
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td colSpan={8}>
-								</td>
-							</tr>
-						</tbody>
-					</Table> */}
 					</div>
 
 				</div>

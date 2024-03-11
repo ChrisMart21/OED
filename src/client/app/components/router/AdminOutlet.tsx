@@ -7,7 +7,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useWaitForInit } from '../../redux/componentHooks';
 import InitializingComponent from './InitializingComponent';
 import { authApi, authPollInterval } from '../../redux/api/authApi';
-import AdminLocalEditsComponent from '../../components/admin/AdminLocalEditsComponent';
+import AdminLocalEditsComponentModal from '../../components/admin/AdminLocalEditsComponent';
 
 /**
  * @returns An outlet that is responsible for Admin Routes. Routes non-admin users away from certain routes.
@@ -24,7 +24,7 @@ export default function AdminOutlet() {
 		? <Navigate to='/' />
 		: <>
 			{/* Modal that all Admin Pages will share. */}
-			<AdminLocalEditsComponent />
-			<Outlet /> :
+			<AdminLocalEditsComponentModal />
+			<Outlet />
 		</>;
 }

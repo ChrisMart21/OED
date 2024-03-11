@@ -7,17 +7,18 @@ import * as React from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'reactstrap';
-import { GroupData } from 'types/redux/groups';
-import { selectUnitDataById } from '../../redux/api/unitsApi';
+import { selectGroupById } from '../../redux/api/groupsApi';
+import { selectUnitById } from '../../redux/api/unitsApi';
 import { useAppSelector } from '../../redux/reduxHooks';
 import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
+// import { selectEditedGroupById } from '../../redux/slices/localEditsSlice';
 import '../../styles/card-page.css';
 import { noUnitTranslated } from '../../utils/input';
 import translate from '../../utils/translate';
 import EditGroupModalComponent from './EditGroupModalComponent';
 
 interface GroupViewComponentProps {
-	group: GroupData;
+	groupId: number;
 }
 
 /**
@@ -26,10 +27,10 @@ interface GroupViewComponentProps {
  * @returns Group info card element
  */
 export default function GroupViewComponent(props: GroupViewComponentProps) {
-	// Don't check if admin since only an admin is allowed to route to this page.
-
 	// Edit Modal Show
 	const [showEditModal, setShowEditModal] = useState(false);
+	const groupData = useAppSelector(state => selectGroupById(state, props.groupId));
+	// const edits = useAppSelector(state => selectEditedGroupById(state, props.groupId));
 
 	const handleShow = () => {
 		setShowEditModal(true);
@@ -44,30 +45,29 @@ export default function GroupViewComponent(props: GroupViewComponentProps) {
 
 	// Set up to display the units associated with the group as the unit identifier.
 	// unit state
-	const unitDataById = useAppSelector(selectUnitDataById);
-
+	const groupsDefultGraphicUnit = useAppSelector(state => selectUnitById(state, groupData.defaultGraphicUnit));
 
 	return (
 		<div className="card">
 			{/* Use identifier-container since similar and groups only have name */}
 			<div className="identifier-container">
-				{props.group.name}
+				{groupData.name}
 			</div>
 			<div className="item-container">
 				{/* Use meter translation id string since same one wanted. */}
 				<b><FormattedMessage id="defaultGraphicUnit" /></b>
 				{/* This is the default graphic unit associated with the group or no unit if none. */}
-				{props.group.defaultGraphicUnit === -99 ? ' ' + noUnitTranslated().identifier : ' ' + unitDataById[props.group.defaultGraphicUnit].identifier}
+				{groupData.defaultGraphicUnit === -99 ? ' ' + noUnitTranslated().identifier : ' ' + groupsDefultGraphicUnit.identifier}
 			</div>
 			{loggedInAsAdmin &&
-				<div className={props.group.displayable.toString()}>
-					<b><FormattedMessage id="displayable" /></b> {translate(`TrueFalseType.${props.group.displayable.toString()}`)}
+				<div className={groupData.displayable.toString()}>
+					<b><FormattedMessage id="displayable" /></b> {translate(`TrueFalseType.${groupData.displayable.toString()}`)}
 				</div>
 			}
 			{/* Only show first 30 characters so card does not get too big. Should limit to one line */}
 			{loggedInAsAdmin &&
 				<div className="item-container">
-					<b><FormattedMessage id="note" /> </b> {props.group.note?.slice(0, 29)}
+					<b><FormattedMessage id="note" /> </b> {groupData.note?.slice(0, 29)}
 				</div>
 			}
 			<div className="edit-btn">
@@ -78,7 +78,7 @@ export default function GroupViewComponent(props: GroupViewComponentProps) {
 				{/* Creates a child GroupModalEditComponent */}
 				<EditGroupModalComponent
 					show={showEditModal}
-					groupId={props.group.id}
+					groupId={groupData.id}
 					handleShow={handleShow}
 					handleClose={handleClose} />
 			</div>

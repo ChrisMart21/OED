@@ -6,11 +6,13 @@ import { parseZone } from 'moment';
 import * as React from 'react';
 import { Button, Card, CardBody, CardImg, CardTitle, Col, Row } from 'reactstrap';
 import { useTranslate } from '../../redux/componentHooks';
-import { useAppSelector } from '../../redux/reduxHooks';
+import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
 import { selectMapMetaData } from '../../redux/selectors/mapsSelectors';
+import { openModalWithID } from '../../redux/slices/localEditsSlice';
 
 
 export const MapViewComponent = (props: { id: number; }) => {
+	const dispatch = useAppDispatch();
 	const mapData = useAppSelector(state => selectMapMetaData(state, props.id));
 	const translate = useTranslate();
 
@@ -23,6 +25,19 @@ export const MapViewComponent = (props: { id: number; }) => {
 				style={{ height: 250 }}
 			/>
 			<CardBody>
+				{
+					/*
+						id='map.id' /> </th>
+						id='map.name' /> </th>
+						id='map.displayable' /> </th>
+						id='map.circle.size' /> </th>
+						id='map.modified.date' /> </th>
+						id='map.filename' /> </th>
+						id='note' /> </th>
+						id='map.calibration' /> </th>
+						id='remove' /> </th>
+						*/
+				}
 				<CardTitle tag="h5">{mapData?.name}</CardTitle>
 				<Row>
 					<Col>{mapData?.filename}</Col>
@@ -41,11 +56,12 @@ export const MapViewComponent = (props: { id: number; }) => {
 				</Row>
 				<Row>
 					<Col>
-						<Button color="secondary" onClick={() => {}}>{translate('edit')}</Button>
+						<Button color="secondary" onClick={() => dispatch(openModalWithID(props.id))}>{translate('edit')}</Button>
 					</Col>
 				</Row>
 			</CardBody>
 		</Card>
+
 	);
 };
 

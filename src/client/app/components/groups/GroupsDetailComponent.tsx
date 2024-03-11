@@ -58,11 +58,14 @@ export default function GroupsDetailComponent() {
 				}
 				{
 					<div className="card-container">
-						{Object.values(visibleGroups)
-							.map(groupData => (<GroupViewComponent
-								group={groupData}
-								key={groupData.id}
-							/>))}
+						{
+							Object.values(visibleGroups).map(groupData =>
+								<GroupViewComponent
+									key={`${groupData.id}:${groupData.name}`}
+									groupId={groupData.id}
+								/>
+							)
+						}
 					</div>
 				}
 			</div>

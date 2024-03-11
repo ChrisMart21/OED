@@ -9,7 +9,7 @@ import { selectMeterById } from '../../redux/api/metersApi';
 import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
 import { selectGraphicName, selectUnitName } from '../../redux/selectors/adminSelectors';
 import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
-import { setIdToEdit } from '../../redux/slices/localEditsSlice';
+import { openModalWithID, selectEditedMeterById } from '../../redux/slices/localEditsSlice';
 import '../../styles/card-page.css';
 import translate from '../../utils/translate';
 
@@ -27,11 +27,12 @@ export default function MeterViewComponent(props: MeterViewComponentProps) {
 	// Check for admin status
 	const loggedInAsAdmin = useAppSelector(selectIsAdmin);
 	const meterData = useAppSelector(state => selectMeterById(state, meterId));
+	const edits = useAppSelector(state => selectEditedMeterById(state, meterId));
 
 	const dispatch = useAppDispatch();
-	const toggleModal = React.useCallback(() => dispatch(setIdToEdit(meterId)), [meterId]);
+	const editMeter = React.useCallback(() => dispatch(openModalWithID(meterId)), [meterId]);
 
-
+	console.log(edits);
 	// Set up to display the units associated with the meter as the unit identifier.
 	// This is the unit associated with the meter.
 	const unitName = useAppSelector(state => selectUnitName(state, meterData.id));
@@ -42,7 +43,7 @@ export default function MeterViewComponent(props: MeterViewComponentProps) {
 	return (
 		<div className="card">
 			<div className="identifier-container">
-				{meterData.identifier}
+				{`${meterData.identifier}:${edits ? ' (Edited)' : ''}`}
 			</div>
 			{loggedInAsAdmin &&
 				<div className="item-container">
@@ -73,7 +74,7 @@ export default function MeterViewComponent(props: MeterViewComponentProps) {
 			}
 			{loggedInAsAdmin &&
 				<div className="edit-btn">
-					<Button color='secondary' onClick={toggleModal}>
+					<Button color='secondary' onClick={editMeter}>
 						<FormattedMessage id="edit.meter" />
 					</Button>
 				</div>

@@ -1,13 +1,16 @@
-import { GroupDataState, groupsAdapter, groupsInitialState } from '../../redux/api/groupsApi';
-import { MapDataState, mapsAdapter, mapsInitialState } from '../../redux/api/mapsApi';
-import { MeterDataState, meterAdapter, metersInitialState } from '../../redux/api/metersApi';
-import { UnitDataState, unitsAdapter, unitsInitialState } from '../../redux/api/unitsApi';
+import { RootState } from 'store';
 import { createThunkSlice } from '../../redux/sliceCreators';
-import { RootState } from '../../store';
 import { GroupData } from '../../types/redux/groups';
 import { MapMetadata } from '../../types/redux/map';
 import { MeterData } from '../../types/redux/meters';
 import { UnitData } from '../../types/redux/units';
+import {
+	GroupDataState, MapDataState, MeterDataState, UnitDataState,
+	groupsAdapter, groupsInitialState,
+	mapsAdapter, mapsInitialState,
+	meterAdapter, metersInitialState,
+	unitsAdapter, unitsInitialState
+} from '../entityAdapters';
 
 
 interface LocalEditsState {
@@ -16,7 +19,7 @@ interface LocalEditsState {
 	groups: GroupDataState;
 	units: UnitDataState;
 	maps: MapDataState;
-	id: number;
+	idToEdit: number;
 	isOpen: boolean;
 }
 
@@ -26,7 +29,7 @@ const initialState: LocalEditsState = {
 	groups: groupsInitialState,
 	units: unitsInitialState,
 	maps: mapsInitialState,
-	id: 0,
+	idToEdit: 0,
 	isOpen: false
 };
 
@@ -37,14 +40,14 @@ export enum EntityType {
 	MAP = 'maps'
 }
 
-type SetEditAction =
+export type SetEditAction =
 	{ type: EntityType.METER; data: MeterData | MeterData[] } |
 	{ type: EntityType.GROUP; data: GroupData | GroupData[] } |
 	{ type: EntityType.UNIT; data: UnitData | UnitData[] } |
 	{ type: EntityType.MAP; data: MapMetadata | MapMetadata[] }
 
 
-// Define your actions and reducers here
+// Slice is used to track local admin edits to avoid using useState, and to avoid altering the server response data
 export const localEditsSlice = createThunkSlice({
 	name: 'localEdits',
 	initialState,
@@ -53,7 +56,11 @@ export const localEditsSlice = createThunkSlice({
 			state.isOpen = !state.isOpen;
 		}),
 		setIdToEdit: create.reducer<number>((state, { payload }) => {
-			state.id = payload;
+			state.idToEdit = payload;
+		}),
+		openModalWithID: create.reducer<number>((state, { payload }) => {
+			state.idToEdit = payload;
+			state.isOpen = true;
 		}),
 		setEdits: create.reducer<SetEditAction>((state, { payload: { type, data } }) => {
 			// TS linter doesn't mind but webpack complains so type assert all here
@@ -74,7 +81,7 @@ export const localEditsSlice = createThunkSlice({
 					throw new Error('Invalid entity type');
 			}
 		}),
-		deleteEdits: create.reducer<{ type: EntityType, id: undefined | number | number[] }>((state, { payload: { type, id } }) => {
+		deleteEdits: create.reducer<{ type: EntityType, id?: number | number[] }>((state, { payload: { type, id } }) => {
 			if (typeof id === 'number') {
 				type === EntityType.METER && meterAdapter.removeOne(state.meters, id);
 				type === EntityType.GROUP && groupsAdapter.removeOne(state.groups, id);
@@ -94,13 +101,27 @@ export const localEditsSlice = createThunkSlice({
 		})
 	}),
 	selectors: {
-		selectIdToEdit: state => state.id,
-		selectIsOpen: state => state.isOpen
+		selectIdToEdit: state => state.idToEdit,
+		selectIsOpen: state => state.isOpen,
+		selectLocalEdits: (state, type: EntityType) => {
+			switch (type) {
+				case EntityType.METER:
+					return state.meters;
+				case EntityType.GROUP:
+					return state.groups;
+				case EntityType.UNIT:
+					return state.units;
+				case EntityType.MAP:
+					return state.maps;
+				default:
+					throw new Error('Invalid entity type');
+			}
+		}
 	}
 });
 
-export const { setEdits, deleteEdits,toggleIsOpen,setIdToEdit } = localEditsSlice.actions;
-export const { selectIdToEdit, selectIsOpen } = localEditsSlice.selectors;
+export const { setEdits, deleteEdits, toggleIsOpen, setIdToEdit, openModalWithID } = localEditsSlice.actions;
+export const { selectIdToEdit, selectIsOpen, selectLocalEdits } = localEditsSlice.selectors;
 export const {
 	selectAll: selectAllEditedMeters,
 	selectById: selectEditedMeterById,
@@ -132,4 +153,3 @@ export const {
 	selectIds: selectEditedMapIds,
 	selectEntities: selectEditedMapDataById
 } = mapsAdapter.getSelectors((state: RootState) => state.localEdits.maps);
-

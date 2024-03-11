@@ -17,6 +17,7 @@ import { userApi } from '../api/userApi';
 import { versionApi } from '../api/versionApi';
 import { createThunkSlice } from '../sliceCreators';
 import { currentUserSlice } from './currentUserSlice';
+import { fetchMapsDetails } from '../../redux/actions/map';
 
 export interface AppState {
 	initComplete: boolean;
@@ -66,7 +67,7 @@ export const appStateSlice = createThunkSlice({
 				dispatch(conversionsApi.endpoints.getCikDetails.initiate());
 
 				// Older style thunk fetch cycle for maps until migration
-				// dispatch(fetchMapsDetails());
+				dispatch(fetchMapsDetails());
 
 				// If user is an admin, they receive additional meter details.
 				// To avoid sending duplicate requests upon startup, verify user then fetch

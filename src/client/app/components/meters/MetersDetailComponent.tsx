@@ -43,23 +43,23 @@ export default function MetersDetailComponent() {
 						<TooltipMarkerComponent page='meters' helpTextId={getToolTipMessage(isAdmin)} />
 					</div>
 				</h2>
-				{isAdmin &&
+				{
+					isAdmin &&
 					<div className="edit-btn">
 						<CreateMeterModalComponent />
 					</div>
 				}
-				{
-					<div className="card-container">
-						{/* Create a MeterViewComponent for each MeterData in Meters State */}
-						{Object.values(visibleMeters)
-							.map(MeterData =>
-								<MeterViewComponent
-									key={`${MeterData.id}:${MeterData.identifier}`}
-									meter={MeterData}
-								/>
-							)}
-					</div>
-				}
+				<div className="card-container">
+					{
+						// Create a MeterViewComponent for each MeterData in Meters State
+						Object.values(visibleMeters).map(MeterData =>
+							<MeterViewComponent
+								key={`${MeterData.id}:${MeterData.identifier}`}
+								meterId={MeterData.id}
+							/>
+						)
+					}
+				</div>
 			</div>
 		</div >;
 }

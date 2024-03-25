@@ -12,6 +12,7 @@ import {
 } from 'reactstrap';
 import { selectGroupDataById } from '../../redux/api/groupsApi';
 import { metersApi, selectMeterById, selectMeterDataById } from '../../redux/api/metersApi';
+import { useLocalEditHandlers } from '../../redux/componentHooks';
 import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
 import {
 	MAX_DATE, MAX_DATE_MOMENT, MAX_ERRORS,
@@ -32,7 +33,6 @@ import translate from '../../utils/translate';
 import TimeZoneSelect from '../TimeZoneSelect';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
-import { useLocalEditHandlers } from '../../redux/componentHooks';
 
 interface EditMeterModalComponentProps {
 	meterId: number;
@@ -266,9 +266,13 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							// the state value such as .toString() here.
 							value={data.enabled?.toString()}
 							onChange={e => handleBooleanChange(e)}>
-							{Object.keys(TrueFalseType).map(key => {
-								return (<option value={key} key={key}>{translate(`TrueFalseType.${key}`)}</option>);
-							})}
+							{
+								Object.keys(TrueFalseType).map(key =>
+									<option value={key} key={key}>
+										{translate(`TrueFalseType.${key}`)}
+									</option>
+								)
+							}
 						</Input>
 					</FormGroup></Col>
 					{/* Displayable input */}

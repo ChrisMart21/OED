@@ -8,7 +8,7 @@ import localeData, { LocaleDataKey } from '../translations/data';
 import { useAppDispatch, useAppSelector } from './reduxHooks';
 import { selectInitComplete, selectSelectedLanguage } from './slices/appStateSlice';
 import { selectCurrentUserRole, selectIsAdmin } from './slices/currentUserSlice';
-import { SetEditAction, setEdits } from './slices/localEditsSlice';
+import { SetOneLocalEditAction, setOneLocalEdit } from './slices/localEditsSlice';
 
 export const useWaitForInit = () => {
 	const isAdmin = useAppSelector(selectIsAdmin);
@@ -41,31 +41,31 @@ export const useTranslate = () => {
 
 
 // Form handlers intended for use with local Edits Slice.
-export const useLocalEditHandlers = (action: SetEditAction) => {
+export const useLocalEditHandlers = (action: SetOneLocalEditAction) => {
 	const dispatch = useAppDispatch();
 	const { type, data } = action;
 	const handleStringChange = React.useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			dispatch(
-				setEdits({ type, data: { ...data as any, [e.target.name]: e.target.value.trim() } })
+				setOneLocalEdit({ type, data: { ...data as any, [e.target.name]: e.target.value.trim() } })
 			);
 		}, [data]);
 
 	const handleBooleanChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		dispatch(
-			setEdits({ type, data: { ...data as any, [e.target.name]: JSON.parse(e.target.value) } })
+			setOneLocalEdit({ type, data: { ...data as any, [e.target.name]: JSON.parse(e.target.value) } })
 		);
 	}, [data]);
 
 	const handleNumberChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		dispatch(
-			setEdits({ type, data: { ...data as any, [e.target.name]: Number(e.target.value) } })
+			setOneLocalEdit({ type, data: { ...data as any, [e.target.name]: Number(e.target.value) } })
 		);
 	}, [data]);
 
 	const handleTimeZoneChange = React.useCallback((timeZone: string) => {
 		dispatch(
-			setEdits({ type, data: { ...data as any, timeZone } })
+			setOneLocalEdit({ type, data: { ...data as any, timeZone } })
 		);
 	}, [data]);
 

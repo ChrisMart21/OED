@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { TimeInterval } from '../../../../common/TimeInterval';
-import { EntityType, deleteEdits } from '../../redux/slices/localEditsSlice';
+import { EntityType, deleteOneLocalEdit } from '../../redux/slices/localEditsSlice';
 import { RootState } from '../../store';
 import { NamedIDItem } from '../../types/items';
 import { RawReadings } from '../../types/readings';
@@ -66,7 +66,7 @@ export const metersApi = baseApi.injectEndpoints({
 							meterAdapter.upsertOne(cacheDraft, formatMeterInfo(edits));
 						}));
 					// Once Successfully edited, delete the edit from localEdits
-					dispatch(deleteEdits({ type: EntityType.METER, id: edits.id }));
+					dispatch(deleteOneLocalEdit({ type: EntityType.METER, id: edits.id }));
 
 				});
 			}

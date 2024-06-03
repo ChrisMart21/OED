@@ -11,6 +11,7 @@ import {
 	meterAdapter, metersInitialState,
 	unitsAdapter, unitsInitialState
 } from '../entityAdapters';
+import { createEntityAdapter } from '@reduxjs/toolkit';
 
 
 interface LocalEditsState {
@@ -40,12 +41,13 @@ export enum EntityType {
 	MAP = 'maps'
 }
 
-export type SetEditAction =
-	{ type: EntityType.METER; data: MeterData | MeterData[] } |
-	{ type: EntityType.GROUP; data: GroupData | GroupData[] } |
-	{ type: EntityType.UNIT; data: UnitData | UnitData[] } |
-	{ type: EntityType.MAP; data: MapMetadata | MapMetadata[] }
+export type SetOneLocalEditAction =
+	{ type: EntityType.METER; data: MeterData } |
+	{ type: EntityType.GROUP; data: GroupData } |
+	{ type: EntityType.UNIT; data: UnitData } |
+	{ type: EntityType.MAP; data: MapMetadata }
 
+export const localEditAdapter = createEntityAdapter<MeterData | GroupData | UnitData | MapMetadata>();
 
 // Slice is used to track local admin edits to avoid using useState, and to avoid altering the server response data
 export const localEditsSlice = createThunkSlice({
@@ -62,66 +64,36 @@ export const localEditsSlice = createThunkSlice({
 			state.idToEdit = payload;
 			state.isOpen = true;
 		}),
-		setEdits: create.reducer<SetEditAction>((state, { payload: { type, data } }) => {
-			// TS linter doesn't mind but webpack complains so type assert all here
-			switch (type) {
-				case EntityType.METER:
-					Array.isArray(data) ? meterAdapter.setAll(state.meters, data as MeterData[]) : meterAdapter.setOne(state.meters, data as MeterData);
-					break;
-				case EntityType.GROUP:
-					Array.isArray(data) ? groupsAdapter.setAll(state.groups, data as GroupData[]) : groupsAdapter.setOne(state.groups, data as GroupData);
-					break;
-				case EntityType.UNIT:
-					Array.isArray(data) ? unitsAdapter.setAll(state.units, data as UnitData[]) : unitsAdapter.setOne(state.units, data as UnitData);
-					break;
-				case EntityType.MAP:
-					Array.isArray(data) ? mapsAdapter.setAll(state.maps, data as MapMetadata[]) : mapsAdapter.setOne(state.maps, data as MapMetadata);
-					break;
-				default:
-					throw new Error('Invalid entity type');
-			}
+		setOneLocalEdit: create.reducer<SetOneLocalEditAction>((state, { payload: { type, data } }) => {
+			type === EntityType.METER && localEditAdapter.setOne(state.meters, data);
+			type === EntityType.GROUP && localEditAdapter.setOne(state.groups, data);
+			type === EntityType.UNIT && localEditAdapter.setOne(state.units, data);
+			type === EntityType.MAP && localEditAdapter.setOne(state.maps, data);
 		}),
-		deleteEdits: create.reducer<{ type: EntityType, id?: number | number[] }>((state, { payload: { type, id } }) => {
-			if (typeof id === 'number') {
-				type === EntityType.METER && meterAdapter.removeOne(state.meters, id);
-				type === EntityType.GROUP && groupsAdapter.removeOne(state.groups, id);
-				type === EntityType.UNIT && unitsAdapter.removeOne(state.units, id);
-				type === EntityType.MAP && mapsAdapter.removeOne(state.maps, id);
-			} else if (Array.isArray(id)) {
-				type === EntityType.METER && meterAdapter.removeMany(state.meters, id);
-				type === EntityType.GROUP && groupsAdapter.removeMany(state.groups, id);
-				type === EntityType.UNIT && unitsAdapter.removeMany(state.units, id);
-				type === EntityType.MAP && mapsAdapter.removeMany(state.maps, id);
-			} else {
-				type === EntityType.METER && meterAdapter.removeAll(state.meters);
-				type === EntityType.GROUP && groupsAdapter.removeAll(state.groups);
-				type === EntityType.UNIT && unitsAdapter.removeAll(state.units);
-				type === EntityType.MAP && mapsAdapter.removeAll(state.maps);
-			}
+		deleteAllLocalEdits: create.reducer<{ type: EntityType }>((state, { payload: { type } }) => {
+			type === EntityType.METER && localEditAdapter.removeAll(state.meters);
+			type === EntityType.GROUP && localEditAdapter.removeAll(state.groups);
+			type === EntityType.UNIT && localEditAdapter.removeAll(state.units);
+			type === EntityType.MAP && localEditAdapter.removeAll(state.maps);
+		}),
+		deleteOneLocalEdit: create.reducer<{ type: EntityType, id: number }>((state, { payload: { type, id } }) => {
+			type === EntityType.METER && localEditAdapter.removeOne(state.meters, id);
+			type === EntityType.GROUP && localEditAdapter.removeOne(state.groups, id);
+			type === EntityType.UNIT && localEditAdapter.removeOne(state.units, id);
+			type === EntityType.MAP && localEditAdapter.removeOne(state.maps, id);
 		})
 	}),
 	selectors: {
 		selectIdToEdit: state => state.idToEdit,
-		selectIsOpen: state => state.isOpen,
-		selectLocalEdits: (state, type: EntityType) => {
-			switch (type) {
-				case EntityType.METER:
-					return state.meters;
-				case EntityType.GROUP:
-					return state.groups;
-				case EntityType.UNIT:
-					return state.units;
-				case EntityType.MAP:
-					return state.maps;
-				default:
-					throw new Error('Invalid entity type');
-			}
-		}
+		selectIsOpen: state => state.isOpen
 	}
 });
 
-export const { setEdits, deleteEdits, toggleIsOpen, setIdToEdit, openModalWithID } = localEditsSlice.actions;
-export const { selectIdToEdit, selectIsOpen, selectLocalEdits } = localEditsSlice.selectors;
+export const {
+	deleteOneLocalEdit, toggleIsOpen, setIdToEdit,
+	openModalWithID, setOneLocalEdit, deleteAllLocalEdits
+} = localEditsSlice.actions;
+export const { selectIdToEdit, selectIsOpen } = localEditsSlice.selectors;
 export const {
 	selectAll: selectAllEditedMeters,
 	selectById: selectEditedMeterById,

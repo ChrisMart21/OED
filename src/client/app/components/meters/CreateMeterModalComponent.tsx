@@ -197,7 +197,11 @@ export default function CreateMeterModalComponent() {
 							</Label>
 							<Input id='identifier' name='identifier' type='text' autoComplete='on'
 								value={meterDetails.identifier}
-								onChange={e => handleStringChange(e)}
+								onChange={e => {
+									handleStringChange(e);
+									console.log(typeof e, e);
+								}
+								}
 							/>
 						</FormGroup></Col>
 						{/* Name input */}

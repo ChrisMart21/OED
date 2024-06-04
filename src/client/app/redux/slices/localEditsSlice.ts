@@ -1,4 +1,9 @@
-import { RootState } from 'store';
+import { createEntityAdapter } from '@reduxjs/toolkit';
+import { selectGroupById } from '../../redux/api/groupsApi';
+import { selectMapById } from '../../redux/api/mapsApi';
+import { selectMeterById } from '../../redux/api/metersApi';
+import { selectUnitById } from '../../redux/api/unitsApi';
+import { RootState } from '../../store';
 import { createThunkSlice } from '../../redux/sliceCreators';
 import { GroupData } from '../../types/redux/groups';
 import { MapMetadata } from '../../types/redux/map';
@@ -11,7 +16,6 @@ import {
 	meterAdapter, metersInitialState,
 	unitsAdapter, unitsInitialState
 } from '../entityAdapters';
-import { createEntityAdapter } from '@reduxjs/toolkit';
 
 
 interface LocalEditsState {
@@ -85,15 +89,47 @@ export const localEditsSlice = createThunkSlice({
 	}),
 	selectors: {
 		selectIdToEdit: state => state.idToEdit,
-		selectIsOpen: state => state.isOpen
+		selectIsOpen: state => state.isOpen,
+		selectLocalEditById: (state, xtra: { type: EntityType, id: number }) => {
+			const { type, id } = xtra;
+			switch (type) {
+				case EntityType.METER:
+					return meterAdapter.getSelectors().selectById(state.meters, id);
+				case EntityType.GROUP:
+					return groupsAdapter.getSelectors().selectById(state.groups, id);
+				case EntityType.UNIT:
+					return unitsAdapter.getSelectors().selectById(state.units, id);
+				case EntityType.MAP:
+					return mapsAdapter.getSelectors().selectById(state.maps, id);
+				default:
+					throw ('Shouldn\'t arrive here');
+			}
+		}
 	}
 });
+export const selectApiDataById = (state: RootState, xtra: { type: EntityType, id: number }) => {
+	{
+		const { type, id } = xtra;
+		switch (type) {
+			case EntityType.METER:
+				return selectMeterById(state, id);
+			case EntityType.GROUP:
+				return selectGroupById(state, id);
+			case EntityType.UNIT:
+				return selectUnitById(state, id);
+			case EntityType.MAP:
+				return selectMapById(state, id);
+			default:
+				return undefined;
+		}
+	}
+};
 
 export const {
 	deleteOneLocalEdit, toggleIsOpen, setIdToEdit,
 	openModalWithID, setOneLocalEdit, deleteAllLocalEdits
 } = localEditsSlice.actions;
-export const { selectIdToEdit, selectIsOpen } = localEditsSlice.selectors;
+export const { selectIdToEdit, selectIsOpen, selectLocalEditById } = localEditsSlice.selectors;
 export const {
 	selectAll: selectAllEditedMeters,
 	selectById: selectEditedMeterById,

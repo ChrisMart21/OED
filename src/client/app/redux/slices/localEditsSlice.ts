@@ -3,8 +3,8 @@ import { selectGroupById } from '../../redux/api/groupsApi';
 import { selectMapById } from '../../redux/api/mapsApi';
 import { selectMeterById } from '../../redux/api/metersApi';
 import { selectUnitById } from '../../redux/api/unitsApi';
-import { RootState } from '../../store';
 import { createThunkSlice } from '../../redux/sliceCreators';
+import { RootState } from '../../store';
 import { GroupData } from '../../types/redux/groups';
 import { MapMetadata } from '../../types/redux/map';
 import { MeterData } from '../../types/redux/meters';
@@ -16,6 +16,7 @@ import {
 	meterAdapter, metersInitialState,
 	unitsAdapter, unitsInitialState
 } from '../entityAdapters';
+import { EntityDataType } from './localEditsSliceV2';
 
 
 interface LocalEditsState {
@@ -45,11 +46,19 @@ export enum EntityType {
 	MAP = 'maps'
 }
 
-export type SetOneLocalEditAction =
+export type EntityTypeMap =
 	{ type: EntityType.METER; data: MeterData } |
 	{ type: EntityType.GROUP; data: GroupData } |
 	{ type: EntityType.UNIT; data: UnitData } |
 	{ type: EntityType.MAP; data: MapMetadata }
+
+export type EntityTypeMap2 = {
+	[EntityType.METER]: MeterData;
+	[EntityType.GROUP]: GroupData;
+	[EntityType.UNIT]: UnitData;
+	[EntityType.MAP]: MapMetadata;
+
+}
 
 export const localEditAdapter = createEntityAdapter<MeterData | GroupData | UnitData | MapMetadata>();
 
@@ -68,7 +77,7 @@ export const localEditsSlice = createThunkSlice({
 			state.idToEdit = payload;
 			state.isOpen = true;
 		}),
-		setOneLocalEdit: create.reducer<SetOneLocalEditAction>((state, { payload: { type, data } }) => {
+		setOneLocalEdit: create.reducer<EntityTypeMap>((state, { payload: { type, data } }) => {
 			type === EntityType.METER && localEditAdapter.setOne(state.meters, data);
 			type === EntityType.GROUP && localEditAdapter.setOne(state.groups, data);
 			type === EntityType.UNIT && localEditAdapter.setOne(state.units, data);
@@ -89,54 +98,66 @@ export const localEditsSlice = createThunkSlice({
 	}),
 	selectors: {
 		selectIdToEdit: state => state.idToEdit,
-		selectIsOpen: state => state.isOpen,
-		selectLocalEditById: (state, xtra: { type: EntityType, id: number }) => {
-			const { type, id } = xtra;
-			switch (type) {
-				case EntityType.METER:
-					return meterAdapter.getSelectors().selectById(state.meters, id);
-				case EntityType.GROUP:
-					return groupsAdapter.getSelectors().selectById(state.groups, id);
-				case EntityType.UNIT:
-					return unitsAdapter.getSelectors().selectById(state.units, id);
-				case EntityType.MAP:
-					return mapsAdapter.getSelectors().selectById(state.maps, id);
-				default:
-					throw ('Shouldn\'t arrive here');
-			}
-		}
+		selectIsOpen: state => state.isOpen
 	}
 });
-export const selectApiDataById = (state: RootState, xtra: { type: EntityType, id: number }) => {
+export const selectApiDataById = <T extends EntityType>(state: RootState, xtra: { type: T, id: number }) => {
 	{
 		const { type, id } = xtra;
+		let x;
 		switch (type) {
 			case EntityType.METER:
-				return selectMeterById(state, id);
+				x = selectMeterById(state, id);
+				break;
 			case EntityType.GROUP:
-				return selectGroupById(state, id);
+				x = selectGroupById(state, id);
+				break;
 			case EntityType.UNIT:
-				return selectUnitById(state, id);
+				x = selectUnitById(state, id);
+				break;
 			case EntityType.MAP:
-				return selectMapById(state, id);
+				x = selectMapById(state, id);
+				break;
 			default:
-				return undefined;
+				x = undefined;
 		}
+		return x as EntityDataType<T>;
 	}
+};
+export const selectLocalEditById = <T extends EntityType>(state: RootState, xtra: { type: T, id: number }) => {
+	const { type, id } = xtra;
+	let x;
+	switch (type) {
+		case EntityType.METER:
+			x = meterAdapter.getSelectors().selectById(state.localEdits2.meters!.edits, id);
+			break;
+		case EntityType.GROUP:
+			x = groupsAdapter.getSelectors().selectById(state.localEdits2.groups!.edits, id);
+			break;
+		case EntityType.UNIT:
+			x = unitsAdapter.getSelectors().selectById(state.localEdits2.units!.edits, id);
+			break;
+		case EntityType.MAP:
+			x = mapsAdapter.getSelectors().selectById(state.localEdits2.maps!.edits, id);
+			break;
+		default:
+			throw ('Shouldn\'t arrive here');
+	}
+	return x as EntityDataType<T>;
 };
 
 export const {
 	deleteOneLocalEdit, toggleIsOpen, setIdToEdit,
 	openModalWithID, setOneLocalEdit, deleteAllLocalEdits
 } = localEditsSlice.actions;
-export const { selectIdToEdit, selectIsOpen, selectLocalEditById } = localEditsSlice.selectors;
+export const { selectIdToEdit, selectIsOpen } = localEditsSlice.selectors;
 export const {
 	selectAll: selectAllEditedMeters,
 	selectById: selectEditedMeterById,
 	selectTotal: selectEditedMeterTotal,
 	selectIds: selectEditedMeterIds,
 	selectEntities: selectEditedMeterDataById
-} = meterAdapter.getSelectors((state: RootState) => state.localEdits.meters);
+} = meterAdapter.getSelectors((state: RootState) => state.localEdits2.meters!.edits);
 
 export const {
 	selectAll: selectAllEditedGroups,
@@ -144,7 +165,7 @@ export const {
 	selectTotal: selectEditedGroupTotal,
 	selectIds: selectEditedGroupIds,
 	selectEntities: selectEditedGroupDataById
-} = groupsAdapter.getSelectors((state: RootState) => state.localEdits.groups);
+} = groupsAdapter.getSelectors((state: RootState) => state.localEdits2.groups!.edits);
 
 export const {
 	selectAll: selectAllEditedUnits,
@@ -152,7 +173,7 @@ export const {
 	selectTotal: selectEditedUnitTotal,
 	selectIds: selectEditedUnitIds,
 	selectEntities: selectEditedUnitDataById
-} = unitsAdapter.getSelectors((state: RootState) => state.localEdits.units);
+} = unitsAdapter.getSelectors((state: RootState) => state.localEdits2.units!.edits);
 
 export const {
 	selectAll: selectAllEditedMaps,
@@ -160,4 +181,5 @@ export const {
 	selectTotal: selectEditedMapTotal,
 	selectIds: selectEditedMapIds,
 	selectEntities: selectEditedMapDataById
-} = mapsAdapter.getSelectors((state: RootState) => state.localEdits.maps);
+} = mapsAdapter.getSelectors((state: RootState) => state.localEdits2.maps!.edits);
+

@@ -13,6 +13,7 @@ import {
 } from 'reactstrap';
 import { selectGroupDataById } from '../../redux/api/groupsApi';
 import { metersApi, selectMeterById, selectMeterDataById } from '../../redux/api/metersApi';
+import { useLocalEditHook } from '../../redux/componentHooks';
 import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
 import {
 	MAX_DATE, MAX_DATE_MOMENT, MAX_ERRORS,
@@ -21,8 +22,8 @@ import {
 	selectGraphicUnitCompatibility
 } from '../../redux/selectors/adminSelectors';
 import {
-	EntityType, SetOneLocalEditAction, deleteOneLocalEdit, selectApiDataById,
-	selectLocalEditById, setOneLocalEdit
+	EntityType,
+	deleteOneLocalEdit
 } from '../../redux/slices/localEditsSlice';
 import '../../styles/modal.css';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
@@ -36,36 +37,8 @@ import translate from '../../utils/translate';
 import TimeZoneSelect from '../TimeZoneSelect';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
-/**
- * @param type asfasd
- * @param id asdasd
- */
-export function useLocalEditHook<T>(type: EntityType, id: number): [T, React.Dispatch<React.SetStateAction<T>>] {
-	const dispatch = useAppDispatch();
-	const apiData = useAppSelector(state => selectApiDataById(state, { type, id })) as T;
-	const localEditData = useAppSelector(state => selectLocalEditById(state, { type, id })) as T;
-	const [reactLevelState, setRLevelState] = React.useState<T>(
-		localEditData
-			? _.cloneDeep(localEditData)
-			: _.cloneDeep(apiData)
-	);
-	const updateLocalEditState = React.useCallback(
-		_.debounce(
-			(action: SetOneLocalEditAction, serverData) => {
-				const meterHasChanges = action.data && !_.isEqual(serverData, localEditData);
-				meterHasChanges && dispatch(setOneLocalEdit({ type, data: action.data as any }));
-				!meterHasChanges && dispatch(deleteOneLocalEdit({ type, id }));
-			},
-			500,
-			{ leading: false, trailing: true }
-		), []);
-	React.useEffect(() => {
-		console.log('Updating localState');
-		updateLocalEditState({ type: EntityType.METER, data: localEditData as any }, apiData);
 
-	}, [reactLevelState]);
-	return [reactLevelState, setRLevelState];
-}
+
 interface EditMeterModalComponentProps {
 	meterId: number;
 }
@@ -79,28 +52,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 	const [editMeter] = metersApi.useEditMeterMutation();
 	// The current meter's state of meter being edited. It should always be valid.
 	const meterDataApi = useAppSelector(state => selectMeterById(state, props.meterId));
-	const [rState, setRstate] = useLocalEditHook<MeterData>(EntityType.METER, props.meterId);
-	// const [rState, setRstate] = React.useState<MeterData>(localMeterEdits ? _.cloneDeep(localMeterEdits) : _.cloneDeep(meterDataApi));
-	// const updateLocalEditState = React.useCallback(
-	// 	_.debounce(
-	// 		(action: SetOneLocalEditAction) => {
-	// 			dispatch(setOneLocalEdit({type: action.type, data: action.data as any }));
-	// 		},
-	// 		500,
-	// 		{leading: false, trailing: true }
-	// 	), []);
-
-	// React.useEffect(() => {
-	// 	const meterHasChanges = !_.isEqual(meterDataApi, rState);
-	// 	console.log(meterHasChanges, 'Updating localState');
-	// 	meterHasChanges && updateLocalEditState({type: EntityType.METER, data: rState });
-	// 	!meterHasChanges && dispatch(deleteOneLocalEdit({type: EntityType.METER, id: props.meterId }));
-
-	// }, [rState]);
-
-	// Initially local edits are undefined so use the API cahce.
-	// Will use local for subsequent renders
-	// const rState = localMeterEdits ?? meterDataApi;
+	const [rState, setRstate] = useLocalEditHook(EntityType.METER, props.meterId);
 	const {
 		compatibleGraphicUnits,
 		incompatibleGraphicUnits,

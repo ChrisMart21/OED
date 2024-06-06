@@ -2,13 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { cloneDeep, debounce, isEqual } from 'lodash';
 import * as React from 'react';
 import { createIntl, createIntlCache, defineMessages } from 'react-intl';
 import localeData, { LocaleDataKey } from '../translations/data';
 import { useAppDispatch, useAppSelector } from './reduxHooks';
 import { selectInitComplete, selectSelectedLanguage } from './slices/appStateSlice';
 import { selectCurrentUserRole, selectIsAdmin } from './slices/currentUserSlice';
-import { SetOneLocalEditAction, setOneLocalEdit } from './slices/localEditsSlice';
+import {
+	EntityType, EntityTypeMap,
+	setOneLocalEdit
+} from './slices/localEditsSlice';
+import { meterEdits, selectLocalOrServerEntityById } from './slices/localEditsSliceV2';
 
 export const useWaitForInit = () => {
 	const isAdmin = useAppSelector(selectIsAdmin);
@@ -41,7 +46,7 @@ export const useTranslate = () => {
 
 
 // Form handlers intended for use with local Edits Slice.
-export const useLocalEditHandlers = (action: SetOneLocalEditAction) => {
+export const useLocalEditHandlers = (action: EntityTypeMap) => {
 	const dispatch = useAppDispatch();
 	const { type, data } = action;
 	const handleStringChange = React.useCallback(
@@ -78,4 +83,28 @@ export const useLocalEditHandlers = (action: SetOneLocalEditAction) => {
 		}
 	), [handleNumberChange, handleBooleanChange, handleNumberChange, handleTimeZoneChange]);
 	return handlers;
+};
+
+// Hook avoids updating redux state too often by primary utilzing react.useState, and debouncing updates to redux.
+export const useLocalEditHook = <T extends EntityType>(type: T, id: number) => {
+	const dispatch = useAppDispatch();
+	const apiData = useAppSelector(state => selectLocalOrServerEntityById(state, { type, id }));
+	const localEditData = useAppSelector(state => selectLocalOrServerEntityById(state, { type, id, local: true }));
+	const [reactLevelState, setRLevelState] = React.useState(localEditData ? cloneDeep(localEditData) : cloneDeep(apiData));
+	const updateLocalEditState = React.useCallback(debounce((action: EntityTypeMap) => {
+		const differences = !isEqual(apiData, action.data);
+		if (differences) {
+			// changes in react state, update reduux to match
+			action.type === EntityType.METER && dispatch(meterEdits.actions.setOne(action.data));
+		} else if (!differences && localEditData) {
+			// states match, and redux is already populated, so delete (states match so no edits)
+			action.type === EntityType.METER && dispatch(meterEdits.actions.deleteOne(action.data.id));
+
+		}
+	}, 1000, { leading: false, trailing: true }), [apiData, localEditData]);
+	React.useEffect(() => {
+		updateLocalEditState({ type, data: reactLevelState as any });
+
+	}, [reactLevelState]);
+	return [reactLevelState, setRLevelState] as const;
 };

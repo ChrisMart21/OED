@@ -32,7 +32,6 @@ export default function MeterViewComponent(props: MeterViewComponentProps) {
 	const dispatch = useAppDispatch();
 	const editMeter = React.useCallback(() => dispatch(openModalWithID(meterId)), [meterId]);
 
-	console.log(edits);
 	// Set up to display the units associated with the meter as the unit identifier.
 	// This is the unit associated with the meter.
 	const unitName = useAppSelector(state => selectUnitName(state, meterData.id));

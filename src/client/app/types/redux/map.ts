@@ -156,7 +156,7 @@ export interface MapMetadata {
 	opposite?: GPSPoint;
 	// Migrating away from image in State
 	mapSource: string;
-	image: HTMLImageElement;
+	// image: HTMLImageElement;
 	imgHeight: number;
 	imgWidth: number;
 	calibrationMode?: CalibrationModeTypes;

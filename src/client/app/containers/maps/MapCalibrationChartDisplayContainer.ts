@@ -9,7 +9,7 @@ import * as plotly from 'plotly.js';
 import { CartesianPoint, Dimensions, normalizeImageDimensions } from '../../utils/calibration';
 import { updateCurrentCartesian } from '../../redux/actions/map';
 import { store }  from '../../store';
-import { CalibrationSettings } from '../../types/redux/map';
+import { CalibrationSettings, MapMetadata } from '../../types/redux/map';
 import Locales from '../../types/locales';
 
 function mapStateToProps(state: State) {
@@ -18,7 +18,7 @@ function mapStateToProps(state: State) {
 	const texts: string[] = [];
 
 	const mapID = state.maps.calibratingMap;
-	const map = state.maps.editedMaps[mapID];
+	const map = state.maps.editedMaps[mapID] as MapMetadata &{image: HTMLImageElement};
 	const points = map.calibrationSet;
 	if (points) {
 		for (const point of points) {

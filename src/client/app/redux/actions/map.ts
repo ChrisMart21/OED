@@ -186,7 +186,7 @@ function isReadyForCalculation(state: State): boolean {
  */
 function prepareDataToCalculation(state: State): CalibrationResult {
 	const mapID = state.maps.calibratingMap;
-	const mp = state.maps.editedMaps[mapID];
+	const mp = state.maps.editedMaps[mapID] as MapMetadata &{image: HTMLImageElement};
 	const imageDimensions: Dimensions = {
 		width: mp.image.width,
 		height: mp.image.height
@@ -234,7 +234,7 @@ export function submitCalibratingMap(): Thunk {
 export function submitNewMap(): Thunk {
 	return async (dispatch: Dispatch, getState: GetState) => {
 		const mapID = getState().maps.calibratingMap;
-		const map = getState().maps.editedMaps[mapID];
+		const map = getState().maps.editedMaps[mapID] as MapMetadata &{image: HTMLImageElement};
 		try {
 			const acceptableMap: MapData = {
 				...map,
@@ -267,7 +267,7 @@ export function submitNewMap(): Thunk {
  */
 export function submitEditedMap(mapID: number): Thunk {
 	return async (dispatch: Dispatch, getState: GetState) => {
-		const map = getState().maps.editedMaps[mapID];
+		const map = getState().maps.editedMaps[mapID] as MapMetadata &{image: HTMLImageElement};
 		dispatch(submitMapEdits(mapID));
 		try {
 			const acceptableMap: MapData = {

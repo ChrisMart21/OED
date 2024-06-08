@@ -10,13 +10,12 @@ import { appStateSlice } from './slices/appStateSlice';
 import { currentUserSlice } from './slices/currentUserSlice';
 import { graphSlice } from './slices/graphSlice';
 import { localEditsSlice } from './slices/localEditsSlice';
-import { localEdits2 } from './slices/localEditsSliceV2';
 export const rootReducer = combineReducers({
 	appState: appStateSlice.reducer,
 	graph: graphSlice.reducer,
 	adminPreference: adminPreference.reducer,
 	localEdits: localEditsSlice.reducer,
-	localEdits2,
+	// localEdits2,
 	currentUser: currentUserSlice.reducer,
 	// RTK Query's Derived Reducers
 	[baseApi.reducerPath]: baseApi.reducer,

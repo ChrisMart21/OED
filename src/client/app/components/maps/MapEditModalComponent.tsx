@@ -3,7 +3,7 @@ import { FormattedMessage } from 'react-intl';
 import { Col, FormGroup, Input, Label, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import TooltipHelpComponent from '../../components/TooltipHelpComponent';
 import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
-import { EntityType, selectEditedMapById, selectIdToEdit, toggleIsOpen } from '../../redux/slices/localEditsSlice';
+import { EntityType, selectEditById, selectIdToEdit, toggleIsOpen } from '../../redux/slices/localEditsSlice';
 import { selectMapById } from '../../redux/api/mapsApi';
 import { useLocalEditHandlers, useTranslate } from '../../redux/componentHooks';
 
@@ -13,7 +13,11 @@ const MapEditModalComponent = () => {
 	const translate = useTranslate();
 	const toggleModal = React.useCallback(() => dispatch(toggleIsOpen()), []);
 	// use edited maps if they exist, otherwise use the original map data
-	const mapData = useAppSelector(state => selectEditedMapById(state, selectIdToEdit(state)) ?? selectMapById(state, selectIdToEdit(state)));
+	const mapData = useAppSelector(state =>
+		selectEditById(state, { type: EntityType.MAP, id: selectIdToEdit(state) })
+		??
+		selectMapById(state, selectIdToEdit(state))
+	);
 	const {
 		handleNumberChange,
 		handleStringChange

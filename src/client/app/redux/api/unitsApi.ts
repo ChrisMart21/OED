@@ -68,12 +68,13 @@ export const unitsApi = baseApi.injectEndpoints({
 });
 
 export const selectUnitDataResult = unitsApi.endpoints.getUnitsDetails.select();
+export const selectUnitApiData = (state: RootState) => selectUnitDataResult(state).data ?? unitsInitialState;
 export const {
 	selectAll: selectAllUnits,
 	selectById: selectUnitById,
 	selectTotal: selectUnitTotal,
 	selectIds: selectUnitIds,
 	selectEntities: selectUnitDataById
-} = unitsAdapter.getSelectors((state: RootState) => selectUnitDataResult(state).data ?? unitsInitialState);
+} = unitsAdapter.getSelectors(selectUnitApiData);
 
 export const stableEmptyUnitDataById: UnitDataById = {};

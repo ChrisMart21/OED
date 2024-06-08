@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { TimeInterval } from '../../../../common/TimeInterval';
-import { EntityType, deleteOneLocalEdit } from '../../redux/slices/localEditsSlice';
 import { RootState } from '../../store';
 import { NamedIDItem } from '../../types/items';
 import { RawReadings } from '../../types/readings';
@@ -66,7 +65,7 @@ export const metersApi = baseApi.injectEndpoints({
 							meterAdapter.upsertOne(cacheDraft, formatMeterInfo(edits));
 						}));
 					// Once Successfully edited, delete the edit from localEdits
-					dispatch(deleteOneLocalEdit({ type: EntityType.METER, id: edits.id }));
+					// dispatch(deleteOneLocalEdit({ type: EntityType.METER, id: edits.id }));
 
 				});
 			}
@@ -100,14 +99,14 @@ export const metersApi = baseApi.injectEndpoints({
 
 
 export const selectMeterDataResult = metersApi.endpoints.getMeters.select();
-
+export const selectMeterApiData = (state: RootState) => selectMeterDataResult(state).data ?? metersInitialState;
 export const {
 	selectAll: selectAllMeters,
 	selectById: selectMeterById,
 	selectTotal: selectMeterTotal,
 	selectIds: selectMeterIds,
 	selectEntities: selectMeterDataById
-} = meterAdapter.getSelectors((state: RootState) => selectMeterDataResult(state).data ?? metersInitialState);
+} = meterAdapter.getSelectors(selectMeterApiData);
 
 
 /**

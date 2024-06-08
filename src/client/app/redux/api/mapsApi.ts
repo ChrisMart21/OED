@@ -64,12 +64,12 @@ export const mapsApi = baseApi.injectEndpoints({
 	})
 });
 
-export const selectMapDataResult = mapsApi.endpoints.getMapDetails.select();
-
+const selectMapDataResult = mapsApi.endpoints.getMapDetails.select();
+export const selectMapApiData = (state: RootState) => selectMapDataResult(state).data ?? mapsInitialState;
 export const {
 	selectAll: selectAllMaps,
 	selectById: selectMapById,
 	selectIds: selectMapIds,
 	selectEntities: selectMapDataById,
 	selectTotal: selectTotalMaps
-} = mapsAdapter.getSelectors((state: RootState) => selectMapDataResult(state).data ?? mapsInitialState);
+} = mapsAdapter.getSelectors(selectMapApiData);

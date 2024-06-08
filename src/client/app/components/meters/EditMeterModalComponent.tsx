@@ -23,7 +23,7 @@ import {
 } from '../../redux/selectors/adminSelectors';
 import {
 	EntityType,
-	deleteOneLocalEdit
+	removeOneEdit
 } from '../../redux/slices/localEditsSlice';
 import '../../styles/modal.css';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
@@ -705,7 +705,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 			</Container></ModalBody>
 			<ModalFooter>
 				{/* Hides the modal */}
-				<Button color='secondary' onClick={() => dispatch(deleteOneLocalEdit({ type: EntityType.METER, id: props.meterId }))}>
+				<Button color='secondary' onClick={() => dispatch(removeOneEdit({ type: EntityType.METER, id: props.meterId }))}>
 					<FormattedMessage id="discard.changes" />
 				</Button>
 				{/* On click calls the function handleSaveChanges in this component */}

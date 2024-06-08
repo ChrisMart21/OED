@@ -141,7 +141,7 @@ class MapCalibrationInitiateComponent extends React.Component<MapInitiatePropsWi
 			this.setState({filename: this.fileInput.current.files[0].name});
 			const image = new Image();
 			image.src = imageURL;
-			const source: MapMetadata = {
+			const source: MapMetadata &{image: HTMLImageElement} = {
 				...this.props.map,
 				name: this.state.mapName,
 				filename: this.fileInput.current.files[0].name,

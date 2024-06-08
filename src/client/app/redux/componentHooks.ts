@@ -10,10 +10,13 @@ import { useAppDispatch, useAppSelector } from './reduxHooks';
 import { selectInitComplete, selectSelectedLanguage } from './slices/appStateSlice';
 import { selectCurrentUserRole, selectIsAdmin } from './slices/currentUserSlice';
 import {
-	EntityType, EntityTypeMap,
-	setOneLocalEdit
+	EntityType,
+	EntityTypeDiscrim,
+	removeOneEdit,
+	selectLocalOrServerEntityById,
+	setOneEdit,
+	SetOneEditAction
 } from './slices/localEditsSlice';
-import { meterEdits, selectLocalOrServerEntityById } from './slices/localEditsSliceV2';
 
 export const useWaitForInit = () => {
 	const isAdmin = useAppSelector(selectIsAdmin);
@@ -46,31 +49,31 @@ export const useTranslate = () => {
 
 
 // Form handlers intended for use with local Edits Slice.
-export const useLocalEditHandlers = (action: EntityTypeMap) => {
+export const useLocalEditHandlers = (action: EntityTypeDiscrim) => {
 	const dispatch = useAppDispatch();
 	const { type, data } = action;
 	const handleStringChange = React.useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			dispatch(
-				setOneLocalEdit({ type, data: { ...data as any, [e.target.name]: e.target.value.trim() } })
+				setOneEdit({ type, data: { ...data as any, [e.target.name]: e.target.value.trim() } })
 			);
 		}, [data]);
 
 	const handleBooleanChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		dispatch(
-			setOneLocalEdit({ type, data: { ...data as any, [e.target.name]: JSON.parse(e.target.value) } })
+			setOneEdit({ type, data: { ...data as any, [e.target.name]: JSON.parse(e.target.value) } })
 		);
 	}, [data]);
 
 	const handleNumberChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		dispatch(
-			setOneLocalEdit({ type, data: { ...data as any, [e.target.name]: Number(e.target.value) } })
+			setOneEdit({ type, data: { ...data as any, [e.target.name]: Number(e.target.value) } })
 		);
 	}, [data]);
 
 	const handleTimeZoneChange = React.useCallback((timeZone: string) => {
 		dispatch(
-			setOneLocalEdit({ type, data: { ...data as any, timeZone } })
+			setOneEdit({ type, data: { ...data as any, timeZone } })
 		);
 	}, [data]);
 
@@ -91,20 +94,22 @@ export const useLocalEditHook = <T extends EntityType>(type: T, id: number) => {
 	const apiData = useAppSelector(state => selectLocalOrServerEntityById(state, { type, id }));
 	const localEditData = useAppSelector(state => selectLocalOrServerEntityById(state, { type, id, local: true }));
 	const [reactLevelState, setRLevelState] = React.useState(localEditData ? cloneDeep(localEditData) : cloneDeep(apiData));
-	const updateLocalEditState = React.useCallback(debounce((action: EntityTypeMap) => {
+
+	const updateLocalEditState = React.useCallback(debounce((action: SetOneEditAction) => {
 		const differences = !isEqual(apiData, action.data);
 		if (differences) {
 			// changes in react state, update reduux to match
-			action.type === EntityType.METER && dispatch(meterEdits.actions.setOne(action.data));
+			dispatch(setOneEdit({ type, data: action.data  }));
 		} else if (!differences && localEditData) {
 			// states match, and redux is already populated, so delete (states match so no edits)
-			action.type === EntityType.METER && dispatch(meterEdits.actions.deleteOne(action.data.id));
+			dispatch(removeOneEdit({ type, id: action.data.id }));
 
 		}
 	}, 1000, { leading: false, trailing: true }), [apiData, localEditData]);
-	React.useEffect(() => {
-		updateLocalEditState({ type, data: reactLevelState as any });
 
+	React.useEffect(() => {
+		updateLocalEditState({ type, data: reactLevelState});
 	}, [reactLevelState]);
+
 	return [reactLevelState, setRLevelState] as const;
 };

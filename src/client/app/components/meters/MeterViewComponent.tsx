@@ -9,7 +9,7 @@ import { selectMeterById } from '../../redux/api/metersApi';
 import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
 import { selectGraphicName, selectUnitName } from '../../redux/selectors/adminSelectors';
 import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
-import { openModalWithID, selectEditedMeterById } from '../../redux/slices/localEditsSlice';
+import { EntityType, openModalWithID, selectEditById } from '../../redux/slices/localEditsSlice';
 import '../../styles/card-page.css';
 import translate from '../../utils/translate';
 
@@ -27,7 +27,7 @@ export default function MeterViewComponent(props: MeterViewComponentProps) {
 	// Check for admin status
 	const loggedInAsAdmin = useAppSelector(selectIsAdmin);
 	const meterData = useAppSelector(state => selectMeterById(state, meterId));
-	const edits = useAppSelector(state => selectEditedMeterById(state, meterId));
+	const edits = useAppSelector(state => selectEditById(state, { type: EntityType.METER, id: meterId }));
 
 	const dispatch = useAppDispatch();
 	const editMeter = React.useCallback(() => dispatch(openModalWithID(meterId)), [meterId]);

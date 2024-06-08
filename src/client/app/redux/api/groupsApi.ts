@@ -87,14 +87,14 @@ export const groupsApi = baseApi.injectEndpoints({
 });
 
 export const selectGroupDataResult = groupsApi.endpoints.getGroups.select();
-
+export const selectGroupApiData = (state: RootState) => selectGroupDataResult(state).data ?? groupsInitialState;
 export const {
 	selectAll: selectAllGroups,
 	selectById: selectGroupById,
 	selectTotal: selectGroupTotal,
 	selectIds: selectGroupIds,
 	selectEntities: selectGroupDataById
-} = groupsAdapter.getSelectors((state: RootState) => selectGroupDataResult(state).data ?? groupsInitialState);
+} = groupsAdapter.getSelectors(selectGroupApiData);
 
 
 export const selectGroupNameWithID = (state: RootState, groupId: number) => {

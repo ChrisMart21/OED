@@ -1,4 +1,4 @@
-import { createEntityAdapter, EntityState } from '@reduxjs/toolkit';
+import { createEntityAdapter } from '@reduxjs/toolkit';
 import { GroupData } from 'types/redux/groups';
 import { MapMetadata } from 'types/redux/map';
 import { MeterData } from 'types/redux/meters';
@@ -21,12 +21,7 @@ import {
 } from '../entityAdapters';
 
 
-export enum EntityType {
-	METER = 'meters',
-	GROUP = 'groups',
-	UNIT = 'units',
-	MAP = 'maps'
-}
+export enum EntityType { METER, GROUP, UNIT, MAP }
 // Mapping of enum to data type
 export type EntityTypeMap = {
 	[EntityType.METER]: MeterData;
@@ -35,14 +30,11 @@ export type EntityTypeMap = {
 	[EntityType.MAP]: MapMetadata;
 }
 // Generic to be used with EntityTypeEnum to
-export type EntityDataType<T extends EntityType> = T extends keyof EntityTypeMap ? EntityTypeMap[T] : never;
-export type EntityStateDataType<T extends EntityType> = T extends keyof EntityTypeMap ? EntityState<EntityTypeMap[T], number> : never;
-export type EntityTypeDiscrim = { [K in keyof EntityTypeMap]: { type: K; data: EntityTypeMap[K] } }[keyof EntityTypeMap];
-export type SetOneEditAction = { type: EntityType, data: EntityDataType<EntityType> };
+export type EntityDataType<T extends EntityType = EntityType> = T extends keyof EntityTypeMap ? EntityTypeMap[T] : never;
+export type SetOneEditAction<T extends EntityType = EntityType> = { type: T, data: EntityDataType<T> };
 
-export const localEditAdapter = createEntityAdapter<EntityDataType<EntityType>>();
-// Equivalent to above
-// export const localEditAdapter = createEntityAdapter<MeterData | GroupData | UnitData | MapMetadata>();
+export const localEditAdapter = createEntityAdapter<EntityDataType>();
+// Equivalent to createEntityAdapter<MeterData | GroupData | UnitData | MapMetadata|...>();
 interface LocalEditsState {
 	// Define your state properties here
 	meters: MeterDataState;
@@ -115,52 +107,39 @@ export const {
 	openModalWithID, setOneEdit, removeOneEdit
 } = localEditsSlice.actions;
 export const { selectIdToEdit, selectIsOpen } = localEditsSlice.selectors;
-
-export const selectApiCacheByType = <T extends EntityType>(state: RootState, type: T) => {
-	let cache;
+export const selectApiCacheByType = (state: RootState, type: EntityType) => {
 	switch (type) {
 		case EntityType.METER:
-			cache = selectMeterApiData(state);
-			break;
+			return selectMeterApiData(state);
 		case EntityType.GROUP:
-			cache = selectGroupApiData(state);
-			break;
+			return selectGroupApiData(state);
 		case EntityType.UNIT:
-			cache = selectUnitApiData(state);
-			break;
+			return selectUnitApiData(state);
 		case EntityType.MAP:
-			cache = selectMapApiData(state);
-			break;
+			return selectMapApiData(state);
 		default: {
-			cache = type as never;
-			break;
+			return type as never;
 		}
 	}
-	return cache as EntityStateDataType<T>;
 };
 
 // SelectCache location either from the rtkQueryCache, or localEdits
-export const selectCacheByType = <T extends EntityType>(state: RootState, args: { type: T, local?: boolean }) => {
+export const selectCacheByType = (state: RootState, args: { type: EntityType, local?: boolean }) => {
 	// When local passed as true uses local edit cache (defaults to false)
 	const { type, local = false } = args;
-	return (local ? selectEditCacheByType(state, type) : selectApiCacheByType(state, type)) as EntityStateDataType<T>;
+	return (local ? selectEditCacheByType(state, type) : selectApiCacheByType(state, type));
 };
 
-// const { selectById } = entityAdapter.getSelectors();
+const {
+	selectById
+} = localEditAdapter.getSelectors();
 export const selectLocalOrServerEntityById = <T extends EntityType>(state: RootState, args: { type: T, id: number, local?: boolean }) => {
 	const { type, id, local = false } = args;
 	const entityCache = selectCacheByType(state, { type, local });
 	return selectById(entityCache, id) as EntityDataType<T>;
 };
-const {
-	selectById
-} = localEditAdapter.getSelectors();
 
 export const selectEditById = <T extends EntityType>(state: RootState, args: { type: T, id: number }) => {
 	const cache = localEditsSlice.selectors.selectEditCacheByType(state, args.type);
 	return selectById(cache, args.id) as EntityDataType<T>;
-};
-
-export const myFunc = <T,U>(state: RootState, args: { type: T, d}) => {
-	return null;
 };

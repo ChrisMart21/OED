@@ -11,7 +11,6 @@ import { selectInitComplete, selectSelectedLanguage } from './slices/appStateSli
 import { selectCurrentUserRole, selectIsAdmin } from './slices/currentUserSlice';
 import {
 	EntityType,
-	EntityTypeDiscrim,
 	removeOneEdit,
 	selectLocalOrServerEntityById,
 	setOneEdit,
@@ -49,25 +48,25 @@ export const useTranslate = () => {
 
 
 // Form handlers intended for use with local Edits Slice.
-export const useLocalEditHandlers = (action: EntityTypeDiscrim) => {
+export const useLocalEditHandlers = (action: SetOneEditAction) => {
 	const dispatch = useAppDispatch();
 	const { type, data } = action;
 	const handleStringChange = React.useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			dispatch(
-				setOneEdit({ type, data: { ...data as any, [e.target.name]: e.target.value.trim() } })
+				setOneEdit({ type, data: { ...data, [e.target.name]: e.target.value.trim() } })
 			);
 		}, [data]);
 
 	const handleBooleanChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		dispatch(
-			setOneEdit({ type, data: { ...data as any, [e.target.name]: JSON.parse(e.target.value) } })
+			setOneEdit({ type, data: { ...data, [e.target.name]: JSON.parse(e.target.value) } })
 		);
 	}, [data]);
 
 	const handleNumberChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		dispatch(
-			setOneEdit({ type, data: { ...data as any, [e.target.name]: Number(e.target.value) } })
+			setOneEdit({ type, data: { ...data, [e.target.name]: Number(e.target.value) } })
 		);
 	}, [data]);
 
@@ -90,26 +89,32 @@ export const useLocalEditHandlers = (action: EntityTypeDiscrim) => {
 
 // Hook avoids updating redux state too often by primary utilzing react.useState, and debouncing updates to redux.
 export const useLocalEditHook = <T extends EntityType>(type: T, id: number) => {
+	// linter doesn't mind	useLocalEditHook = (type: EntityType, id: number) => {
+	// , but wepack complaions so using <T extends EntityType>
 	const dispatch = useAppDispatch();
 	const apiData = useAppSelector(state => selectLocalOrServerEntityById(state, { type, id }));
 	const localEditData = useAppSelector(state => selectLocalOrServerEntityById(state, { type, id, local: true }));
-	const [reactLevelState, setRLevelState] = React.useState(localEditData ? cloneDeep(localEditData) : cloneDeep(apiData));
+	const [data, setData] = React.useState(localEditData ? cloneDeep(localEditData) : cloneDeep(apiData));
 
-	const updateLocalEditState = React.useCallback(debounce((action: SetOneEditAction) => {
-		const differences = !isEqual(apiData, action.data);
-		if (differences) {
-			// changes in react state, update reduux to match
-			dispatch(setOneEdit({ type, data: action.data  }));
-		} else if (!differences && localEditData) {
-			// states match, and redux is already populated, so delete (states match so no edits)
-			dispatch(removeOneEdit({ type, id: action.data.id }));
+	const updateLocalEditState = React.useCallback(debounce(
+		(action: SetOneEditAction) => {
+			const { type, data } = action;
+			const differences = !isEqual(apiData, data);
+			if (differences) {
+				// changes in react state, update reduux to match
+				dispatch(setOneEdit({ type, data }));
+			} else if (!differences && localEditData) {
+				// states match, and redux is already populated, so delete (states match so no edits)
+				dispatch(removeOneEdit({ type, id: data.id }));
 
-		}
-	}, 1000, { leading: false, trailing: true }), [apiData, localEditData]);
+			}
+		},
+		1000
+	), [apiData, localEditData]);
 
 	React.useEffect(() => {
-		updateLocalEditState({ type, data: reactLevelState});
-	}, [reactLevelState]);
+		updateLocalEditState({ type, data });
+	}, [data]);
 
-	return [reactLevelState, setRLevelState] as const;
+	return [data, setData] as const;
 };

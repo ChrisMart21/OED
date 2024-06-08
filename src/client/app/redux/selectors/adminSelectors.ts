@@ -108,6 +108,7 @@ export const selectGraphicUnitCompatibility = createAppSelector(
 		} else {
 			// No unit is selected
 			// OED does not allow a default graphic unit if there is no unit so it must be -99.
+			// TODO Logic error: should not mutate this state!
 			defaultGraphicUnit = -99;
 			possibleGraphicUnits.forEach(unit => {
 				// Only -99 is allowed.

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { EntityType, removeOneEdit } from '../../redux/slices/localEditsSlice';
 import { TimeInterval } from '../../../../common/TimeInterval';
 import { RootState } from '../../store';
 import { NamedIDItem } from '../../types/items';
@@ -65,7 +66,7 @@ export const metersApi = baseApi.injectEndpoints({
 							meterAdapter.upsertOne(cacheDraft, formatMeterInfo(edits));
 						}));
 					// Once Successfully edited, delete the edit from localEdits
-					// dispatch(deleteOneLocalEdit({ type: EntityType.METER, id: edits.id }));
+					dispatch(removeOneEdit({ type: EntityType.METER, id: edits.id }));
 
 				});
 			}

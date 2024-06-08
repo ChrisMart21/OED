@@ -47,74 +47,65 @@ export const useTranslate = () => {
 };
 
 
-// Form handlers intended for use with local Edits Slice.
-export const useLocalEditHandlers = (action: SetOneEditAction) => {
-	const dispatch = useAppDispatch();
-	const { type, data } = action;
-	const handleStringChange = React.useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			dispatch(
-				setOneEdit({ type, data: { ...data, [e.target.name]: e.target.value.trim() } })
-			);
-		}, [data]);
-
-	const handleBooleanChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-		dispatch(
-			setOneEdit({ type, data: { ...data, [e.target.name]: JSON.parse(e.target.value) } })
-		);
-	}, [data]);
-
-	const handleNumberChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-		dispatch(
-			setOneEdit({ type, data: { ...data, [e.target.name]: Number(e.target.value) } })
-		);
-	}, [data]);
-
-	const handleTimeZoneChange = React.useCallback((timeZone: string) => {
-		dispatch(
-			setOneEdit({ type, data: { ...data as any, timeZone } })
-		);
-	}, [data]);
-
-	const handlers = React.useMemo(() => (
-		{
-			handleStringChange,
-			handleBooleanChange,
-			handleNumberChange,
-			handleTimeZoneChange
-		}
-	), [handleNumberChange, handleBooleanChange, handleNumberChange, handleTimeZoneChange]);
-	return handlers;
-};
-
-// Hook avoids updating redux state too often by primary utilzing react.useState, and debouncing updates to redux.
-export const useLocalEditHook = <T extends EntityType>(type: T, id: number) => {
-	// linter doesn't mind	useLocalEditHook = (type: EntityType, id: number) => {
-	// , but wepack complaions so using <T extends EntityType>
+// Reusable for admin pages to update local edit state
+// Hook utilzies react.useState then updates redux in after a 1 second pause in updates.
+// This helps keep the dispatch count low, especially when typing in input fields
+export const useLocalEditHook = <T extends EntityType>(type: T, id: number, debounceTimer: number = 1000) => {
 	const dispatch = useAppDispatch();
 	const apiData = useAppSelector(state => selectLocalOrServerEntityById(state, { type, id }));
 	const localEditData = useAppSelector(state => selectLocalOrServerEntityById(state, { type, id, local: true }));
-	const [data, setData] = React.useState(localEditData ? cloneDeep(localEditData) : cloneDeep(apiData));
+	// On initial render use the localEdit if it exists, otherwise, use the apiData
+	const [data, setData] = React.useState(cloneDeep(localEditData ?? apiData));
+	// reset react-state
+	const resetData = React.useCallback(() => {
+		setData(cloneDeep(apiData));
+	}, [apiData]);
 
 	const updateLocalEditState = React.useCallback(debounce(
 		(action: SetOneEditAction) => {
 			const { type, data } = action;
+			// reac
 			const differences = !isEqual(apiData, data);
 			if (differences) {
-				// changes in react state, update reduux to match
+				// changes in react state, so update reduux to match
 				dispatch(setOneEdit({ type, data }));
 			} else if (!differences && localEditData) {
-				// states match, and redux is already populated, so delete (states match so no edits)
+				// states are equivalent, however redux is  populated, so delete (states match so no edits)
 				dispatch(removeOneEdit({ type, id: data.id }));
 
 			}
 		},
-		1000
+		// debounce timer in milliseconds. defaults to 1 second.
+		debounceTimer
 	), [apiData, localEditData]);
 
 	React.useEffect(() => {
-		updateLocalEditState({ type, data });
+		// Call invoke the debounced redux dispatch call.
+		updateLocalEditState({ type, data: data });
 	}, [data]);
 
-	return [data, setData] as const;
+
+	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setData(data => ({ ...data, [e.target.name]: e.target.value }));
+	};
+
+	const handleBooleanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setData(data => ({ ...data, [e.target.name]: JSON.parse(e.target.value) }));
+	};
+
+	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setData(data => ({ ...data, [e.target.name]: Number(e.target.value) }));
+	};
+
+	const handleTimeZoneChange = (timeZone: string) => {
+		setData(data => ({ ...data as any, timeZone }));
+	};
+
+	const handlers = {
+		handleStringChange,
+		handleBooleanChange,
+		handleNumberChange,
+		handleTimeZoneChange
+	};
+	return { handlers, data, setData, resetData };
 };

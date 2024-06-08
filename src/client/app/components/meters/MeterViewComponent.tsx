@@ -5,11 +5,10 @@
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'reactstrap';
-import { selectMeterById } from '../../redux/api/metersApi';
 import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
 import { selectGraphicName, selectUnitName } from '../../redux/selectors/adminSelectors';
 import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
-import { EntityType, openModalWithID, selectEditById } from '../../redux/slices/localEditsSlice';
+import { EntityType, openModalWithID, selectEntityDisplayData } from '../../redux/slices/localEditsSlice';
 import '../../styles/card-page.css';
 import translate from '../../utils/translate';
 
@@ -24,25 +23,21 @@ interface MeterViewComponentProps {
  */
 export default function MeterViewComponent(props: MeterViewComponentProps) {
 	const { meterId } = props;
+	const dispatch = useAppDispatch();
 	// Check for admin status
 	const loggedInAsAdmin = useAppSelector(selectIsAdmin);
-	const meterData = useAppSelector(state => selectMeterById(state, meterId));
-	const edits = useAppSelector(state => selectEditById(state, { type: EntityType.METER, id: meterId }));
-
-	const dispatch = useAppDispatch();
+	const [meterData, unsavedChanges] = useAppSelector(state => selectEntityDisplayData(state, { type: EntityType.METER, id: meterId }));
+	const unitName = useAppSelector(state => selectUnitName(state, meterData.id));
+	const graphicName = useAppSelector(state => selectGraphicName(state, meterData.id));
 	const editMeter = React.useCallback(() => dispatch(openModalWithID(meterId)), [meterId]);
-
 	// Set up to display the units associated with the meter as the unit identifier.
 	// This is the unit associated with the meter.
-	const unitName = useAppSelector(state => selectUnitName(state, meterData.id));
 	// This is the default graphic unit  name associated with the meter.
-	const graphicName = useAppSelector(state => selectGraphicName(state, meterData.id));
-
 	// Only display limited data if not an admin.
 	return (
 		<div className="card">
 			<div className="identifier-container">
-				{`${meterData.identifier}:${edits ? ' (Edited)' : ''}`}
+				{`${meterData.identifier}:${unsavedChanges ? ' (Unsaved Edits)' : ''}`}
 			</div>
 			{loggedInAsAdmin &&
 				<div className="item-container">

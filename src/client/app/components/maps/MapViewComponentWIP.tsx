@@ -7,17 +7,12 @@ import * as React from 'react';
 import { Button, Card, CardBody, CardImg, CardTitle, Col, Row } from 'reactstrap';
 import { useTranslate } from '../../redux/componentHooks';
 import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
-import { selectMapMetaData } from '../../redux/selectors/mapsSelectors';
-import { EntityType, openModalWithID, selectEditById } from '../../redux/slices/localEditsSlice';
+import { EntityType, openModalWithID, selectEntityDisplayData } from '../../redux/slices/localEditsSlice';
 
 
 export const MapViewComponent = (props: { id: number; }) => {
 	const dispatch = useAppDispatch();
-	const mapData = useAppSelector(state =>
-		selectEditById(state, { type: EntityType.MAP, id: props.id })
-		??
-		selectMapMetaData(state, props.id)
-	);
+	const [mapData] = useAppSelector(state => selectEntityDisplayData(state, { type: EntityType.MAP, id: props.id }));
 	const translate = useTranslate();
 
 	return (

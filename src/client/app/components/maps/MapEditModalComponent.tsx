@@ -2,26 +2,23 @@ import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Col, FormGroup, Input, Label, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import TooltipHelpComponent from '../../components/TooltipHelpComponent';
+import { useLocalEditHook, useTranslate } from '../../redux/componentHooks';
 import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
-import { EntityType, selectEditById, selectIdToEdit, toggleIsOpen } from '../../redux/slices/localEditsSlice';
-import { selectMapById } from '../../redux/api/mapsApi';
-import { useLocalEditHandlers, useTranslate } from '../../redux/componentHooks';
+import { EntityType, selectIdToEdit, toggleIsOpen } from '../../redux/slices/localEditsSlice';
 
 
 const MapEditModalComponent = () => {
 	const dispatch = useAppDispatch();
 	const translate = useTranslate();
 	const toggleModal = React.useCallback(() => dispatch(toggleIsOpen()), []);
-	// use edited maps if they exist, otherwise use the original map data
-	const mapData = useAppSelector(state =>
-		selectEditById(state, { type: EntityType.MAP, id: selectIdToEdit(state) })
-		??
-		selectMapById(state, selectIdToEdit(state))
-	);
+	const idToEdit = useAppSelector(selectIdToEdit);
 	const {
-		handleNumberChange,
-		handleStringChange
-	} = useLocalEditHandlers({ type: EntityType.MAP, data: mapData });
+		data: mapData,
+		handlers: {
+			handleNumberChange,
+			handleStringChange
+		}
+	} = useLocalEditHook(EntityType.MAP, idToEdit);
 	return (
 		<>
 			<ModalHeader toggle={toggleModal}>

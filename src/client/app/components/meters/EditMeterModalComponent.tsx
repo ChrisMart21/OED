@@ -14,7 +14,7 @@ import {
 import { selectGroupDataById } from '../../redux/api/groupsApi';
 import { metersApi, selectMeterById, selectMeterDataById } from '../../redux/api/metersApi';
 import { useLocalEditHook } from '../../redux/componentHooks';
-import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
+import { useAppSelector } from '../../redux/reduxHooks';
 import {
 	MAX_DATE, MAX_DATE_MOMENT, MAX_ERRORS,
 	MAX_VAL, MIN_DATE, MIN_DATE_MOMENT, MIN_VAL,
@@ -22,8 +22,7 @@ import {
 	selectGraphicUnitCompatibility
 } from '../../redux/selectors/adminSelectors';
 import {
-	EntityType,
-	removeOneEdit
+	EntityType
 } from '../../redux/slices/localEditsSlice';
 import '../../styles/modal.css';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
@@ -48,43 +47,37 @@ interface EditMeterModalComponentProps {
  * @returns Meter edit element
  */
 export default function EditMeterModalComponent(props: EditMeterModalComponentProps) {
-	const dispatch = useAppDispatch();
 	const [editMeter] = metersApi.useEditMeterMutation();
 	// The current meter's state of meter being edited. It should always be valid.
 	const meterDataApi = useAppSelector(state => selectMeterById(state, props.meterId));
-	const [rState, setRstate] = useLocalEditHook(EntityType.METER, props.meterId);
+	const {
+		data: meterData,
+		setData: setMeterData,
+		resetData: resetMeterData,
+		handlers: {
+			handleStringChange,
+			handleBooleanChange,
+			handleNumberChange,
+			handleTimeZoneChange
+		}
+	} = useLocalEditHook(EntityType.METER, props.meterId);
 	const {
 		compatibleGraphicUnits,
 		incompatibleGraphicUnits,
 		compatibleUnits,
 		incompatibleUnits
-	} = useAppSelector(state => selectGraphicUnitCompatibility(state, rState));
+	} = useAppSelector(state => selectGraphicUnitCompatibility(state, meterData));
 	const groupDataByID = useAppSelector(selectGroupDataById);
 	// TODO should this state be used for the meterState above or would that cause issues?
 	const meterDataByID = useAppSelector(selectMeterDataById);
 
-	const { meterIsValid, defaultGraphicUnitIsValid } = useAppSelector(state => isValidCreateMeter(state, rState as unknown as MeterData));
+	const { meterIsValid, defaultGraphicUnitIsValid } = useAppSelector(state => isValidCreateMeter(state, meterData as unknown as MeterData));
 
-	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setRstate(state => ({ ...state, [e.target.name]: e.target.value }));
-	};
-
-	const handleBooleanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setRstate(state => ({ ...state, [e.target.name]: JSON.parse(e.target.value) }));
-	};
-
-	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setRstate(state => ({ ...state, [e.target.name]: Number(e.target.value) }));
-	};
-
-	const handleTimeZoneChange = (timeZone: string) => {
-		setRstate(state => ({ ...state, ['timeZone']: timeZone }));
-	};
 	React.useEffect(() => {
 		if (!defaultGraphicUnitIsValid) {
-			setRstate(state => ({ ...state, defaultGraphicUnit: -99 }));
+			setMeterData(state => ({ ...state, defaultGraphicUnit: -99 }));
 		}
-	}, [rState, defaultGraphicUnitIsValid]);
+	}, [meterData, defaultGraphicUnitIsValid]);
 
 
 	// Save changes
@@ -97,19 +90,18 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 
 		// true if inputted values are okay. Then can submit.
 		let inputOk = true;
-
 		// Check for changes by comparing state to props
-		const meterHasChanges = !_.isEqual(meterDataApi, rState);
-
+		const meterHasChanges = !_.isEqual(meterDataApi, meterData);
 		// Only validate and store if any changes.
 		if (meterHasChanges) {
+			const submitState = _.cloneDeep(meterData);
 			// Set default identifier as name if left blank
-			rState.identifier = (!rState.identifier || rState.identifier.length === 0) ?
-				rState.name : rState.identifier;
+			submitState.identifier = (!submitState.identifier || submitState.identifier.length === 0) ?
+				submitState.name : submitState.identifier;
 
 			// Check GPS entered.
 			// Validate GPS is okay and take from string to GPSPoint to submit.
-			const gpsInput = rState.gps;
+			const gpsInput = submitState.gps;
 			let gps: GPSPoint | null = null;
 			const latitudeIndex = 0;
 			const longitudeIndex = 1;
@@ -137,7 +129,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 			// The message if issue with meter and groups. If blank then no issue.
 			let error_message = '';
 			// See if the meter unit changed since only allowed if not already in a group.
-			if (meterDataApi.unitId !== rState.unitId) {
+			if (meterDataApi.unitId !== submitState.unitId) {
 				// Check if the deep meters of groups in the redux state depend on the meter being edited.
 				// If so, the meter should not be edited.
 				for (const value of Object.values(groupDataByID)) {
@@ -154,13 +146,13 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 			if (inputOk) {
 				// The input passed validation.
 				// GPS may have been updated so create updated state to submit.
-				const submitState = { ...rState, gps };
+				submitState.gps = gps;
 				// Submit new meter if checks where ok.
 				editMeter(submitState);
 			} else if (error_message) {
 				// Display an error message if there are dependent deep meters and checked.
 				// Undo the unit change.
-				setRstate(state => ({ ...state, unitId: meterDataApi.unitId }));
+				setMeterData(state => ({ ...state, unitId: meterDataApi.unitId }));
 				// setLocalMeterEdits({...localMeterEdits, ['unitId']: props.meter.unitId });
 				error_message = translate('meter.unit.is.not.editable') + error_message;
 				// TODO Attempts to add a line break with \n, <br />, etc. failed when using showErrorNotification.
@@ -198,7 +190,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							type='text'
 							autoComplete='on'
 							onChange={e => handleStringChange(e)}
-							value={rState.identifier} />
+							value={meterData.identifier} />
 					</FormGroup></Col>
 					{/* Name input */}
 					<Col><FormGroup>
@@ -209,8 +201,8 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							type='text'
 							autoComplete='on'
 							onChange={e => handleStringChange(e)}
-							value={rState.name}
-							invalid={rState.name === ''} />
+							value={meterData.name}
+							invalid={meterData.name === ''} />
 						<FormFeedback>
 							<FormattedMessage id="error.required" />
 						</FormFeedback>
@@ -224,7 +216,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							id='unitId'
 							name='unitId'
 							type='select'
-							value={rState.unitId}
+							value={meterData.unitId}
 							onChange={e => handleNumberChange(e)}>
 							{Array.from(compatibleUnits).map(unit => {
 								return (<option value={unit.id} key={unit.id}>{unit.identifier}</option>);
@@ -241,7 +233,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							id='defaultGraphicUnit'
 							name='defaultGraphicUnit'
 							type='select'
-							value={rState.defaultGraphicUnit}
+							value={meterData.defaultGraphicUnit}
 							onChange={e => handleNumberChange(e)}>
 							{
 								Array.from(compatibleGraphicUnits).map(unit =>
@@ -270,7 +262,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							// happens when your reload one of these pages but to avoid issues it uses
 							// the ? to avoid access. This only applies to items where you dereference
 							// the state value such as .toString() here.
-							value={rState.enabled?.toString()}
+							value={meterData.enabled?.toString()}
 							onChange={e => handleBooleanChange(e)}>
 							{
 								Object.keys(TrueFalseType).map(key =>
@@ -288,9 +280,9 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							id='displayable'
 							name='displayable'
 							type='select'
-							value={rState.displayable?.toString()}
+							value={meterData.displayable?.toString()}
 							onChange={e => handleBooleanChange(e)}
-							invalid={rState.displayable && rState.unitId === -99}>
+							invalid={meterData.displayable && meterData.unitId === -99}>
 							{Object.keys(TrueFalseType).map(key => {
 								return (<option value={key} key={key}>{translate(`TrueFalseType.${key}`)}</option>);
 							})}
@@ -308,7 +300,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							id='meterType'
 							name='meterType'
 							type='select'
-							value={rState.meterType}
+							value={meterData.meterType}
 							onChange={e => handleStringChange(e)}>
 							{/* The dB expects lowercase. */}
 							{Object.keys(MeterType).map(key => {
@@ -325,8 +317,8 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							type='text'
 							autoComplete='on'
 							onChange={e => handleStringChange(e)}
-							value={rState.readingFrequency}
-							invalid={rState.readingFrequency === ''} />
+							value={meterData.readingFrequency}
+							invalid={meterData.readingFrequency === ''} />
 						<FormFeedback>
 							<FormattedMessage id="error.required" />
 						</FormFeedback>
@@ -342,7 +334,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							type='text'
 							autoComplete='off'
 							onChange={e => handleStringChange(e)}
-							value={nullToEmptyString(rState.url)} />
+							value={nullToEmptyString(meterData.url)} />
 					</FormGroup></Col>
 					{/* GPS input */}
 					<Col><FormGroup>
@@ -353,7 +345,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							type='text'
 							autoComplete='on'
 							onChange={e => handleStringChange(e)}
-							value={getGPSString(rState.gps)} />
+							value={getGPSString(meterData.gps)} />
 					</FormGroup></Col>
 				</Row>
 				<Row xs='1' lg='2'>
@@ -365,9 +357,9 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							name='area'
 							type='number'
 							min='0'
-							defaultValue={rState.area}
+							defaultValue={meterData.area}
 							onChange={e => handleNumberChange(e)}
-							invalid={rState.area < 0} />
+							invalid={meterData.area < 0} />
 						<FormFeedback>
 							<FormattedMessage id="error.negative" />
 						</FormFeedback>
@@ -379,9 +371,9 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							id='areaUnit'
 							name='areaUnit'
 							type='select'
-							value={rState.areaUnit}
+							value={meterData.areaUnit}
 							onChange={e => handleStringChange(e)}
-							invalid={rState.area > 0 && rState.areaUnit === AreaUnitType.none}>
+							invalid={meterData.area > 0 && meterData.areaUnit === AreaUnitType.none}>
 							{Object.keys(AreaUnitType).map(key => {
 								return (<option value={key} key={key}>{translate(`AreaUnitType.${key}`)}</option>);
 							})}
@@ -399,7 +391,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 						name='note'
 						type='textarea'
 						onChange={e => handleStringChange(e)}
-						value={nullToEmptyString(rState.note)}
+						value={nullToEmptyString(meterData.note)}
 						placeholder='Note' />
 				</FormGroup>
 				<Row xs='1' lg='2'>
@@ -410,7 +402,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							id='cumulative'
 							name='cumulative'
 							type='select'
-							value={rState.cumulative?.toString()}
+							value={meterData.cumulative?.toString()}
 							onChange={e => handleBooleanChange(e)}>
 							{Object.keys(TrueFalseType).map(key => {
 								return (<option value={key} key={key}>{translate(`TrueFalseType.${key}`)}</option>);
@@ -424,7 +416,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							id='cumulativeReset'
 							name='cumulativeReset'
 							type='select'
-							value={rState.cumulativeReset?.toString()}
+							value={meterData.cumulativeReset?.toString()}
 							onChange={e => handleBooleanChange(e)}>
 							{Object.keys(TrueFalseType).map(key => {
 								return (<option value={key} key={key}>{translate(`TrueFalseType.${key}`)}</option>);
@@ -443,7 +435,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							type='text'
 							autoComplete='off'
 							onChange={e => handleStringChange(e)}
-							value={rState.cumulativeResetStart}
+							value={meterData.cumulativeResetStart}
 							placeholder='HH:MM:SS' />
 					</FormGroup></Col>
 					{/* cumulativeResetEnd input */}
@@ -455,7 +447,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							type='text'
 							autoComplete='off'
 							onChange={e => handleStringChange(e)}
-							value={rState?.cumulativeResetEnd}
+							value={meterData?.cumulativeResetEnd}
 							placeholder='HH:MM:SS' />
 					</FormGroup></Col>
 				</Row>
@@ -467,7 +459,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							id='endOnlyTime'
 							name='endOnlyTime'
 							type='select'
-							value={rState.endOnlyTime?.toString()}
+							value={meterData.endOnlyTime?.toString()}
 							onChange={e => handleBooleanChange(e)}>
 							{Object.keys(TrueFalseType).map(key => {
 								return (<option value={key} key={key}>{translate(`TrueFalseType.${key}`)}</option>);
@@ -483,8 +475,8 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							type='number'
 							onChange={e => handleNumberChange(e)}
 							min='0'
-							defaultValue={rState?.readingGap}
-							invalid={rState?.readingGap < 0} />
+							defaultValue={meterData?.readingGap}
+							invalid={meterData?.readingGap < 0} />
 						<FormFeedback>
 							<FormattedMessage id="error.negative" />
 						</FormFeedback>
@@ -500,8 +492,8 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							type='number'
 							onChange={e => handleNumberChange(e)}
 							min='0'
-							defaultValue={rState?.readingVariation}
-							invalid={rState?.readingVariation < 0} />
+							defaultValue={meterData?.readingVariation}
+							invalid={meterData?.readingVariation < 0} />
 						<FormFeedback>
 							<FormattedMessage id="error.negative" />
 						</FormFeedback>
@@ -517,8 +509,8 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							step='1'
 							min='1'
 							max='9'
-							defaultValue={rState?.readingDuplication}
-							invalid={rState?.readingDuplication < 1 || rState?.readingDuplication > 9} />
+							defaultValue={meterData?.readingDuplication}
+							invalid={meterData?.readingDuplication < 1 || meterData?.readingDuplication > 9} />
 						<FormFeedback>
 							<FormattedMessage id="error.bounds" values={{ min: '1', max: '9' }} />
 						</FormFeedback>
@@ -532,7 +524,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							id='timeSort'
 							name='timeSort'
 							type='select'
-							value={rState?.timeSort}
+							value={meterData?.timeSort}
 							onChange={e => handleStringChange(e)}>
 							{Object.keys(MeterTimeSortType).map(key => {
 								// This is a bit of a hack but it should work fine. The TypeSortTypes and MeterTimeSortType should be in sync.
@@ -544,7 +536,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 					{/* Timezone input */}
 					<Col><FormGroup>
 						<Label>{translate('meter.time.zone')}</Label>
-						<TimeZoneSelect current={rState.timeZone} handleClick={timeZone => handleTimeZoneChange(timeZone)} />
+						<TimeZoneSelect current={meterData.timeZone} handleClick={timeZone => handleTimeZoneChange(timeZone)} />
 					</FormGroup></Col>
 				</Row>
 				<Row xs='1' lg='2'>
@@ -557,11 +549,11 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							type='number'
 							onChange={e => handleNumberChange(e)}
 							min={MIN_VAL}
-							max={rState.maxVal}
-							required value={rState.minVal}
-							invalid={rState?.minVal < MIN_VAL || rState?.minVal > rState?.maxVal} />
+							max={meterData.maxVal}
+							required value={meterData.minVal}
+							invalid={meterData?.minVal < MIN_VAL || meterData?.minVal > meterData?.maxVal} />
 						<FormFeedback>
-							<FormattedMessage id="error.bounds" values={{ min: MIN_VAL, max: rState.maxVal }} />
+							<FormattedMessage id="error.bounds" values={{ min: MIN_VAL, max: meterData.maxVal }} />
 						</FormFeedback>
 					</FormGroup></Col>
 					{/* maxVal input */}
@@ -572,12 +564,12 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							name='maxVal'
 							type='number'
 							onChange={e => handleNumberChange(e)}
-							min={rState.minVal}
+							min={meterData.minVal}
 							max={MAX_VAL}
-							required value={rState.maxVal}
-							invalid={rState?.maxVal > MAX_VAL || rState?.minVal > rState?.maxVal} />
+							required value={meterData.maxVal}
+							invalid={meterData?.maxVal > MAX_VAL || meterData?.minVal > meterData?.maxVal} />
 						<FormFeedback>
-							<FormattedMessage id="error.bounds" values={{ min: rState.minVal, max: MAX_VAL }} />
+							<FormattedMessage id="error.bounds" values={{ min: meterData.minVal, max: MAX_VAL }} />
 						</FormFeedback>
 					</FormGroup></Col>
 				</Row>
@@ -592,12 +584,12 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							autoComplete='on'
 							onChange={e => handleStringChange(e)}
 							placeholder='YYYY-MM-DD HH:MM:SS'
-							required value={rState.minDate}
-							invalid={!moment(rState.minDate).isValid()
-								|| !moment(rState.minDate).isSameOrAfter(MIN_DATE_MOMENT)
-								|| !moment(rState.minDate).isSameOrBefore(moment(rState.maxDate))} />
+							required value={meterData.minDate}
+							invalid={!moment(meterData.minDate).isValid()
+								|| !moment(meterData.minDate).isSameOrAfter(MIN_DATE_MOMENT)
+								|| !moment(meterData.minDate).isSameOrBefore(moment(meterData.maxDate))} />
 						<FormFeedback>
-							<FormattedMessage id="error.bounds" values={{ min: MIN_DATE, max: moment(rState.maxDate).utc().format() }} />
+							<FormattedMessage id="error.bounds" values={{ min: MIN_DATE, max: moment(meterData.maxDate).utc().format() }} />
 						</FormFeedback>
 					</FormGroup></Col>
 					{/* maxDate input */}
@@ -610,12 +602,12 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							autoComplete='on'
 							onChange={e => handleStringChange(e)}
 							placeholder='YYYY-MM-DD HH:MM:SS'
-							required value={rState.maxDate}
-							invalid={!moment(rState.maxDate).isValid()
-								|| !moment(rState.maxDate).isSameOrBefore(MAX_DATE_MOMENT)
-								|| !moment(rState.maxDate).isSameOrAfter(moment(rState.minDate))} />
+							required value={meterData.maxDate}
+							invalid={!moment(meterData.maxDate).isValid()
+								|| !moment(meterData.maxDate).isSameOrBefore(MAX_DATE_MOMENT)
+								|| !moment(meterData.maxDate).isSameOrAfter(moment(meterData.minDate))} />
 						<FormFeedback>
-							<FormattedMessage id="error.bounds" values={{ min: moment(rState.minDate).utc().format(), max: MAX_DATE }} />
+							<FormattedMessage id="error.bounds" values={{ min: moment(meterData.minDate).utc().format(), max: MAX_DATE }} />
 						</FormFeedback>
 					</FormGroup></Col>
 				</Row>
@@ -630,8 +622,8 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							onChange={e => handleNumberChange(e)}
 							min='0'
 							max={MAX_ERRORS}
-							required value={rState.maxError}
-							invalid={rState?.maxError > MAX_ERRORS || rState?.maxError < 0} />
+							required value={meterData.maxError}
+							invalid={meterData?.maxError > MAX_ERRORS || meterData?.maxError < 0} />
 						<FormFeedback>
 							<FormattedMessage id="error.bounds" values={{ min: 0, max: MAX_ERRORS }} />
 						</FormFeedback>
@@ -643,9 +635,9 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							id='disableChecks'
 							name='disableChecks'
 							type='select'
-							value={rState?.disableChecks?.toString()}
+							value={meterData?.disableChecks?.toString()}
 							onChange={e => handleBooleanChange(e)}
-							invalid={rState?.disableChecks && rState.unitId === -99}>
+							invalid={meterData?.disableChecks && meterData.unitId === -99}>
 							{Object.keys(TrueFalseType).map(key => {
 								return (<option value={key} key={key}>{translate(`TrueFalseType.${key}`)}</option>);
 							})}
@@ -661,7 +653,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							name='reading'
 							type='number'
 							onChange={e => handleNumberChange(e)}
-							defaultValue={rState?.reading} />
+							defaultValue={meterData?.reading} />
 					</FormGroup></Col>
 					{/* startTimestamp input */}
 					<Col><FormGroup>
@@ -673,7 +665,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							autoComplete='on'
 							onChange={e => handleStringChange(e)}
 							placeholder='YYYY-MM-DD HH:MM:SS'
-							value={rState?.startTimestamp} />
+							value={meterData?.startTimestamp} />
 					</FormGroup></Col>
 				</Row>
 				<Row xs='1' lg='2'>
@@ -687,7 +679,7 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							autoComplete='on'
 							onChange={e => handleStringChange(e)}
 							placeholder='YYYY-MM-DD HH:MM:SS'
-							value={rState?.endTimestamp} />
+							value={meterData?.endTimestamp} />
 					</FormGroup></Col>
 					{/* previousEnd input */}
 					<Col><FormGroup>
@@ -699,13 +691,13 @@ export default function EditMeterModalComponent(props: EditMeterModalComponentPr
 							autoComplete='on'
 							onChange={e => handleStringChange(e)}
 							placeholder='YYYY-MM-DD HH:MM:SS'
-							value={rState?.previousEnd} />
+							value={meterData?.previousEnd} />
 					</FormGroup></Col>
 				</Row>
 			</Container></ModalBody>
 			<ModalFooter>
 				{/* Hides the modal */}
-				<Button color='secondary' onClick={() => dispatch(removeOneEdit({ type: EntityType.METER, id: props.meterId }))}>
+				<Button color='secondary' onClick={resetMeterData}>
 					<FormattedMessage id="discard.changes" />
 				</Button>
 				{/* On click calls the function handleSaveChanges in this component */}

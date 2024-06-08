@@ -19,8 +19,11 @@ import {
 	UnitDataState,
 	unitsInitialState
 } from '../entityAdapters';
+import { createAppSelector } from '../../redux/selectors/selectors';
 
 
+// TODO revisit the typing of localEdits (slice,selector, overall approach?) to properly infer arguments and results
+// many type assertions are needed which works, but perhaps a better approach could be looked into.
 export enum EntityType { METER, GROUP, UNIT, MAP }
 // Mapping of enum to data type
 export type EntityTypeMap = {
@@ -34,7 +37,9 @@ export type EntityDataType<T extends EntityType = EntityType> = T extends keyof 
 export type SetOneEditAction<T extends EntityType = EntityType> = { type: T, data: EntityDataType<T> };
 
 export const localEditAdapter = createEntityAdapter<EntityDataType>();
-// Equivalent to createEntityAdapter<MeterData | GroupData | UnitData | MapMetadata|...>();
+const {
+	selectById
+} = localEditAdapter.getSelectors();
 interface LocalEditsState {
 	// Define your state properties here
 	meters: MeterDataState;
@@ -107,6 +112,9 @@ export const {
 	openModalWithID, setOneEdit, removeOneEdit
 } = localEditsSlice.actions;
 export const { selectIdToEdit, selectIsOpen } = localEditsSlice.selectors;
+
+
+// utilize api selectors to get api cache entries.
 export const selectApiCacheByType = (state: RootState, type: EntityType) => {
 	switch (type) {
 		case EntityType.METER:
@@ -122,24 +130,50 @@ export const selectApiCacheByType = (state: RootState, type: EntityType) => {
 		}
 	}
 };
-
+export interface LocalOrApiCache<T extends EntityType = EntityType> {
+	type: T;
+	local?: boolean;
+}
+export type LocalOrApiEntityById = LocalOrApiCache & {
+	id: number
+}
 // SelectCache location either from the rtkQueryCache, or localEdits
-export const selectCacheByType = (state: RootState, args: { type: EntityType, local?: boolean }) => {
+export const selectCacheByType = (state: RootState, args: LocalOrApiCache) => {
 	// When local passed as true uses local edit cache (defaults to false)
 	const { type, local = false } = args;
 	return (local ? selectEditCacheByType(state, type) : selectApiCacheByType(state, type));
 };
 
-const {
-	selectById
-} = localEditAdapter.getSelectors();
+// Select the desired loccal or server cache then pass the cache to the adapter to retrieve desired id.
 export const selectLocalOrServerEntityById = <T extends EntityType>(state: RootState, args: { type: T, id: number, local?: boolean }) => {
 	const { type, id, local = false } = args;
 	const entityCache = selectCacheByType(state, { type, local });
+	// Type Assertion on return to eliminate EntityType Unions and proper type inference in components.
 	return selectById(entityCache, id) as EntityDataType<T>;
 };
 
-export const selectEditById = <T extends EntityType>(state: RootState, args: { type: T, id: number }) => {
-	const cache = localEditsSlice.selectors.selectEditCacheByType(state, args.type);
-	return selectById(cache, args.id) as EntityDataType<T>;
+// If an entry is found in the edits, then there are unsaved changes.
+export const selectEntityHasChanges = (state: RootState, args: LocalOrApiEntityById) => {
+	// if an entry in the local edit cache exits, then unsaved changes.
+	return Boolean(selectLocalOrServerEntityById(state, { type: args.type, id: args.id, local: true }));
+};
+
+const getEntityDisplayData = createAppSelector(
+	// this selector's type inference is too smart for localEdit's type implementation, so it is wrapped with a ts lie ;)
+	// the desired return type is of EntityDataType<T>, however TS infers it as meterdata | groupdata| etc... which cuases issues downastream
+	// Unsure of how to achieve this so simple solution is to wrap this.
+	[
+		(state, args: LocalOrApiEntityById) => selectLocalOrServerEntityById(state, { type: args.type, id: args.id }),
+		(state, args: LocalOrApiEntityById) => selectLocalOrServerEntityById(state, { type: args.type, id: args.id, local: true }),
+		(state, args: LocalOrApiEntityById) => selectEntityHasChanges(state, { type: args.type, id: args.id })
+	],
+	(apiData, localData, unsavedChanges) => {
+		const data = localData ?? apiData;
+		return [data, unsavedChanges];
+	}
+);
+
+// this selector is simply wraps a memoized selector for easy type generic type assertion.
+export const selectEntityDisplayData = <T extends EntityType>(state: RootState, args: { type: T, id: number }) => {
+	return getEntityDisplayData(state, args) as [data: EntityDataType<T>, unsavedChanges: boolean];
 };

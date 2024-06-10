@@ -9,6 +9,7 @@ import React from 'react';
 import { selectCik } from '../redux/api/conversionsApi';
 import { selectAllGroups, selectGroupDataById } from '../redux/api/groupsApi';
 import { selectAllMeters, selectMeterDataById } from '../redux/api/metersApi';
+import { createAutoTrackAppSelector } from '../redux/selectors/selectors';
 import { store } from '../store';
 import { DataType } from '../types/Datasources';
 import { SelectOption } from '../types/items';
@@ -135,6 +136,81 @@ export function metersInChangedGroup(changedGroupState: GroupData): number[] {
 	return Array.from(deepMeters);
 }
 
+export const selectMeterGroupMenuOptionsForGroup = createAutoTrackAppSelector(
+	[
+		selectAllMeters,
+		selectAllGroups,
+		(_state, data: GroupData) => data
+	],
+	(meterData, allGroupData, groupData) => {
+		// deepMeters has a default value since it is optional for the type of state but it should always be set in the code.
+		const { deepMeters, defaultGraphicUnit, id } = groupData;
+		// Get the currentGroup's compatible units. We need to use the current deep meters to get it right.
+		// First must get a set from the array of meter numbers.
+		const deepMetersSet = new Set(deepMeters);
+		// Get the units that are compatible with this set of meters.
+		const currentUnits = unitsCompatibleWithMeters(deepMetersSet);
+		// Get all meters' state.
+		// const meterData = selectAllMeters(state);
+
+		// Options for the meter menu.
+		const meterOpions: SelectOption[] = [];
+		// For each meter, decide its compatibility for the menu
+		meterData.forEach(meter => {
+			const option = {
+				label: meter.identifier,
+				value: meter.id,
+				isDisabled: false,
+				style: {}
+			} as SelectOption;
+
+			const compatibilityChangeCase = getCompatibilityChangeCase(currentUnits, meter.id, DataType.Meter, defaultGraphicUnit, []);
+			if (compatibilityChangeCase === GroupCase.NoCompatibleUnits) {
+				// This meter was not compatible with the ones in the group so disable it as a choice.
+				option.isDisabled = true;
+			} else {
+				// This meter is compatible but need to decide what impact choosing it will have on the group.
+				option.style = getMenuOptionFont(compatibilityChangeCase);
+			}
+			meterOpions.push(option);
+		});
+		// Options for the group menu.
+		const groupOptions: SelectOption[] = [];
+
+		allGroupData.forEach(group => {
+			// You cannot have yourself in the group so not an option.
+			if (group.id !== id) {
+				const option = {
+					label: group.name,
+					value: group.id,
+					isDisabled: false,
+					style: {}
+				} as SelectOption;
+
+				const compatibilityChangeCase = getCompatibilityChangeCase(currentUnits, group.id, DataType.Group, defaultGraphicUnit, group.deepMeters);
+				if (compatibilityChangeCase === GroupCase.NoCompatibleUnits) {
+					option.isDisabled = true;
+				} else {
+					option.style = getMenuOptionFont(compatibilityChangeCase);
+				}
+
+				groupOptions.push(option);
+			}
+		});
+
+		// We want the options sorted by group name.
+		// Had to make item.label? potentially undefined due to start up race conditions
+		const meterSelectOptions = _.sortBy(meterOpions, item => item.label?.toLowerCase(), 'asc');
+		// We want the options sorted by group name.
+
+		const groupSelectOptions = _.sortBy(groupOptions, item => item.label?.toLowerCase(), 'asc');
+
+		// We want the options sorted by meter identifier.
+		// Had to make item.label? potentially undefined due to start up race conditions
+		return { meterSelectOptions, groupSelectOptions };
+	}
+);
+
 /**
  * Get options for the meter menu on the group page.
  * @param defaultGraphicUnit The groups current default graphic unit which may have been updated from what is in Redux state.
@@ -223,6 +299,7 @@ export function getGroupMenuOptionsForGroup(groupId: number, defaultGraphicUnit:
 	// Had to make item.label? potentially undefined due to start up race conditions
 	return _.sortBy(options, item => item.label?.toLowerCase(), 'asc');
 }
+
 
 /**
  * The four cases that could happen when adding a group/meter to a group:

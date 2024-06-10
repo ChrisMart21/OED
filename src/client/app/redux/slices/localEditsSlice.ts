@@ -41,7 +41,6 @@ const {
 	selectById
 } = localEditAdapter.getSelectors();
 interface LocalEditsState {
-	// Define your state properties here
 	meters: MeterDataState;
 	groups: GroupDataState;
 	units: UnitDataState;
@@ -50,7 +49,6 @@ interface LocalEditsState {
 	isOpen: boolean;
 }
 const initialState: LocalEditsState = {
-	// Initialize your state properties here
 	meters: metersInitialState,
 	groups: groupsInitialState,
 	units: unitsInitialState,
@@ -58,7 +56,6 @@ const initialState: LocalEditsState = {
 	idToEdit: 0,
 	isOpen: false
 };
-
 
 // Slice is used to track local admin edits to avoid using useState, and to avoid altering the server response data
 export const localEditsSlice = createThunkSlice({

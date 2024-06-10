@@ -7,15 +7,16 @@ import * as React from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'reactstrap';
-import { selectGroupById } from '../../redux/api/groupsApi';
 import { selectUnitById } from '../../redux/api/unitsApi';
 import { useAppSelector } from '../../redux/reduxHooks';
 import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
 // import { selectEditedGroupById } from '../../redux/slices/localEditsSlice';
+import { EntityType, selectEntityDisplayData } from '../../redux/slices/localEditsSlice';
 import '../../styles/card-page.css';
 import { noUnitTranslated } from '../../utils/input';
 import translate from '../../utils/translate';
 import EditGroupModalComponent from './EditGroupModalComponent';
+// import EditGroupModalComponent from './EditGroupModalComponentWIP';
 
 interface GroupViewComponentProps {
 	groupId: number;
@@ -29,7 +30,7 @@ interface GroupViewComponentProps {
 export default function GroupViewComponent(props: GroupViewComponentProps) {
 	// Edit Modal Show
 	const [showEditModal, setShowEditModal] = useState(false);
-	const groupData = useAppSelector(state => selectGroupById(state, props.groupId));
+	const [groupData, unsavedChanges] = useAppSelector(state => selectEntityDisplayData(state, { type: EntityType.GROUP, id: props.groupId }));
 	// const edits = useAppSelector(state => selectEditedGroupById(state, props.groupId));
 
 	const handleShow = () => {
@@ -51,7 +52,7 @@ export default function GroupViewComponent(props: GroupViewComponentProps) {
 		<div className="card">
 			{/* Use identifier-container since similar and groups only have name */}
 			<div className="identifier-container">
-				{groupData.name}
+				{`${groupData.name}:${unsavedChanges ? ' (Unsaved Edits)' : ''}`}
 			</div>
 			<div className="item-container">
 				{/* Use meter translation id string since same one wanted. */}

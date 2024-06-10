@@ -2,9 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSelector } from '@reduxjs/toolkit';
+import { createSelector, createSelectorCreator } from '@reduxjs/toolkit';
+import { unstable_autotrackMemoize } from 'reselect';
 import { RootState } from '../../store';
 
 // Pre-typed selector. Use anywhere what RootState will be the first arg passed to selector
 // Input Dependencies must be an array.
 export const createAppSelector = createSelector.withTypes<RootState>();
+export const createAutoTrackAppSelector = createSelectorCreator({
+	memoize: unstable_autotrackMemoize
+}).withTypes<RootState>();

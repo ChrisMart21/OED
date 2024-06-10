@@ -107,5 +107,5 @@ export const useLocalEditHook = <T extends EntityType>(type: T, id: number, debo
 		handleNumberChange,
 		handleTimeZoneChange
 	};
-	return { handlers, data, setData, resetData };
+	return { handlers, data, setData, resetData, apiData };
 };

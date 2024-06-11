@@ -59,6 +59,9 @@ export const graphSlice = createSlice({
 	name: 'graph',
 	initialState: initialState,
 	reducers: {
+		// *With the currently history implementation (middleware listeners)*.
+		// Actions Written in this reducers field will trigger history updates, which may or may not be desired.
+		// to act upon state without triggering history updates, use extraReducers.
 		updateSelectedMeters: (state, action: PayloadAction<number[]>) => {
 			state.current.selectedMeters = action.payload;
 		},
@@ -245,6 +248,10 @@ export const graphSlice = createSlice({
 
 	},
 	extraReducers: builder => {
+		// Extra reducers can act upon state without emitting graphslice.actions. All graphslice.actions are history triggers.
+		// With the currently history implementation. Actions that shouldn't be tracked in history are written as extra reducers (createAction).
+		// To act upon state without triggering history updates, use extraReducers.
+		// E.G. updating history should not trigger a history update.(infinite recursion)
 		builder
 			.addCase(
 				updateHistory,

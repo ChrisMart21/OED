@@ -5,10 +5,11 @@
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'reactstrap';
-import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
+import { useAdminEditModalHook } from '../../redux/componentHooks';
+import { useAppSelector } from '../../redux/reduxHooks';
 import { selectGraphicName, selectUnitName } from '../../redux/selectors/adminSelectors';
 import { selectIsAdmin } from '../../redux/slices/currentUserSlice';
-import { EntityType, openModalWithID, selectEntityDisplayData } from '../../redux/slices/localEditsSlice';
+import { EntityType, selectEntityDisplayData } from '../../redux/slices/localEditsSlice';
 import '../../styles/card-page.css';
 import translate from '../../utils/translate';
 
@@ -22,14 +23,13 @@ interface MeterViewComponentProps {
  * @returns Meter info card element
  */
 export default function MeterViewComponent(props: MeterViewComponentProps) {
-	const { meterId } = props;
-	const dispatch = useAppDispatch();
 	// Check for admin status
 	const loggedInAsAdmin = useAppSelector(selectIsAdmin);
-	const [meterData, unsavedChanges] = useAppSelector(state => selectEntityDisplayData(state, { type: EntityType.METER, id: meterId }));
+	const [meterData, unsavedChanges] = useAppSelector(state => selectEntityDisplayData(state, { type: EntityType.METER, id: props.meterId }));
 	const unitName = useAppSelector(state => selectUnitName(state, meterData.id));
 	const graphicName = useAppSelector(state => selectGraphicName(state, meterData.id));
-	const editMeter = React.useCallback(() => dispatch(openModalWithID(meterId)), [meterId]);
+	const { openAdminEditModal } = useAdminEditModalHook({ type: EntityType.METER, id: props.meterId });
+
 	// Set up to display the units associated with the meter as the unit identifier.
 	// This is the unit associated with the meter.
 	// This is the default graphic unit  name associated with the meter.
@@ -68,7 +68,7 @@ export default function MeterViewComponent(props: MeterViewComponentProps) {
 			}
 			{loggedInAsAdmin &&
 				<div className="edit-btn">
-					<Button color='secondary' onClick={editMeter}>
+					<Button color='secondary' onClick={openAdminEditModal}>
 						<FormattedMessage id="edit.meter" />
 					</Button>
 				</div>

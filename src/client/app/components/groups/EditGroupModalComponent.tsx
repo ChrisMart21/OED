@@ -36,7 +36,7 @@ import { AreaUnitType, getAreaUnitConversion } from '../../utils/getAreaUnitConv
 import { getGPSString, nullToEmptyString } from '../../utils/input';
 import { showErrorNotification } from '../../utils/notifications';
 import translate from '../../utils/translate';
-import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
+import { ConfirmActionModalBodyComponent } from '../ConfirmActionModalComponent';
 import ListDisplayComponent from '../ListDisplayComponent';
 import MultiSelectComponent from '../MultiSelectComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
@@ -401,16 +401,17 @@ export default function EditGroupModalComponent(props: EditGroupModalComponentPr
 		tooltipEditGroupView: loggedInAsAdmin ? 'help.admin.groupedit' : 'help.groups.groupdetails'
 	};
 
-	return (
+	return (showDeleteConfirmationModal ?
+		// Return confirmation body, avoids doubleModal
+		<ConfirmActionModalBodyComponent
+			actionConfirmMessage={deleteConfirmationMessage}
+			handleClose={handleDeleteConfirmationModalClose}
+			actionFunction={handleDeleteGroup}
+			actionConfirmText={deleteConfirmText}
+			actionRejectText={deleteRejectText} />
+		:
 		<>
 			{/* This is for the modal for delete. */}
-			<ConfirmActionModalComponent
-				show={showDeleteConfirmationModal}
-				actionConfirmMessage={deleteConfirmationMessage}
-				handleClose={handleDeleteConfirmationModalClose}
-				actionFunction={handleDeleteGroup}
-				actionConfirmText={deleteConfirmText}
-				actionRejectText={deleteRejectText} />
 			<Modal isOpen={props.show} toggle={props.handleClose} size={loggedInAsAdmin ? 'lg' : 'md'}>
 				{/* In a number of the items that follow, what is shown varies on whether you are an admin. */}
 				<ModalHeader>

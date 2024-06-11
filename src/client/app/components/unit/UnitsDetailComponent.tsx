@@ -7,7 +7,7 @@ import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import SpinnerComponent from '../../components/SpinnerComponent';
 import TooltipHelpComponent from '../../components/TooltipHelpComponent';
-import { selectAllUnits, selectUnitDataResult } from '../../redux/api/unitsApi';
+import { selectUnitDataResult, selectUnitIds } from '../../redux/api/unitsApi';
 import { useAppSelector } from '../../redux/reduxHooks';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import CreateUnitModalComponent from './CreateUnitModalComponent';
@@ -22,43 +22,42 @@ export default function UnitsDetailComponent() {
 
 	//Units state
 	const { status } = useAppSelector(selectUnitDataResult);
-	const unitData = useAppSelector(selectAllUnits);
+	const unitDataIds = useAppSelector(selectUnitIds);
 
 	return (
 		<div className='flexGrowOne'>
-			{status === QueryStatus.pending ? (
+			{
+				status === QueryStatus.pending &&
 				<div className='text-center'>
 					<SpinnerComponent loading width={50} height={50} />
 					<FormattedMessage id='redo.cik.and.refresh.db.views'></FormattedMessage>
 				</div>
-			) : (
-				<div>
-					<TooltipHelpComponent page='units' />
-
-					<div className='container-fluid'>
-						<h2 style={titleStyle}>
-							<FormattedMessage id='units' />
-							<div style={tooltipStyle}>
-								<TooltipMarkerComponent page='units' helpTextId={tooltipStyle.tooltipUnitView} />
-							</div>
-						</h2>
-						<div className="edit-btn">
-							{/* The actual button for create is inside this component. */}
-							< CreateUnitModalComponent />
+			}
+			<div>
+				<TooltipHelpComponent page='units' />
+				<div className='container-fluid'>
+					<h2 style={titleStyle}>
+						<FormattedMessage id='units' />
+						<div style={tooltipStyle}>
+							<TooltipMarkerComponent page='units' helpTextId={tooltipStyle.tooltipUnitView} />
 						</div>
-						<div className="card-container">
-							{/* Create a UnitViewComponent for each UnitData in Units State after sorting by identifier */}
-							{
-								unitData.map(unitData => (
-									<UnitViewComponent
-										key={unitData.id}
-										unit={unitData}
-									/>
-								))}
-						</div>
+					</h2>
+					<div className="edit-btn">
+						{/* The actual button for create is inside this component. */}
+						< CreateUnitModalComponent />
+					</div>
+					<div className="card-container">
+						{/* Create a UnitViewComponent for each UnitData in Units State after sorting by identifier */}
+						{
+							unitDataIds.map(unitDataId => (
+								<UnitViewComponent
+									key={unitDataId}
+									unitId={unitDataId}
+								/>
+							))}
 					</div>
 				</div>
-			)}
+			</div>
 		</div>
 	);
 }

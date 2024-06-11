@@ -40,7 +40,7 @@ interface ConfirmActionModalComponentProps {
  * @param props.actionFunction The function that is executed when clicking the action confirmation button.
  * @returns A modal component that executes the actionFunction on confirmation and handleClose on rejection.
  */
-export default function ConfirmActionModalComponent(props: ConfirmActionModalComponentProps) {
+export function ConfirmActionModalComponent(props: ConfirmActionModalComponentProps) {
 
 	const handleClose = () => {
 		props.handleClose();
@@ -66,6 +66,51 @@ export default function ConfirmActionModalComponent(props: ConfirmActionModalCom
 					</Button>
 				</ModalFooter>
 			</Modal>
+		</>
+	);
+}
+
+
+// TODO Same as above, but only returns the modal body, avoids quirks of having two live modals
+// Introduced in the localEdits rework, confirm if okay.
+/**
+ * This is a modal component that can be used to confirm/reject any action by executing the actionFunction or handleClose passed in.
+ * @param props The props for the component
+ * @param props.show Boolean to handle showing/hiding the modal.
+ * @param props.actionTitle (Optional) The title of the modal.
+ * @param props.actionConfirmMessage The message that will display in the center when the modal opens.
+ * @param props.actionConfirmText (Optional) The text of the action confirmation button.
+ * @param props.actionRejectText (Optional) The text of the action rejection button.
+ * @param props.handleClose The function that executes when clicking the action rejection button. Usually used for closing the modal.
+ * @param props.actionFunction The function that is executed when clicking the action confirmation button.
+ * @returns A modal component that executes the actionFunction on confirmation and handleClose on rejection.
+ */
+export function ConfirmActionModalBodyComponent(props: Omit<ConfirmActionModalComponentProps, 'show'>) {
+
+	const handleClose = () => {
+		props.handleClose();
+	};
+
+	return (
+		<>
+			{/* <Modal isOpen={props.show} onClosed={props.handleClose} backdrop='static' centered> */}
+			<ModalHeader>
+				{props.actionTitle ? props.actionTitle : translate('confirm.action')}
+			</ModalHeader>
+			{/* Passed message is already translated */}
+			<ModalBody>{props.actionConfirmMessage}</ModalBody>
+			<ModalFooter>
+				{/* Do not execute the actionFunction and instead close the action confirm modal */}
+				<Button color='secondary' onClick={handleClose}>
+					{/* Render the action reject text if it was passed, or else 'no' */}
+					{props.actionRejectText ? props.actionRejectText : translate('no')}
+				</Button>
+				{/* Execute the action function and close the action confirm modal */}
+				<Button color='primary' onClick={props.actionFunction}>
+					{props.actionConfirmText ? props.actionConfirmText : translate('yes')}
+				</Button>
+			</ModalFooter>
+			{/* </Modal> */}
 		</>
 	);
 }

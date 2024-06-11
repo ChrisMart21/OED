@@ -1,22 +1,21 @@
 import * as React from 'react';
-import { useLocation } from 'react-router-dom';
 import { Modal } from 'reactstrap';
+import EditConversionModalComponent from '../../components/conversion/EditConversionModalComponent';
 import MapEditModalComponent from '../../components/maps/MapEditModalComponent';
 import EditMeterModalComponent from '../../components/meters/EditMeterModalComponent';
-import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
-import { selectIdToEdit, selectIsOpen, toggleIsOpen } from '../../redux/slices/localEditsSlice';
+import EditUnitModalComponent from '../../components/unit/EditUnitModalComponent';
+import { useAdminEditModalHook } from '../../redux/componentHooks';
+import { EntityType } from '../../redux/slices/localEditsSlice';
 
 const AdminLocalEditsModal = () => {
-	const dispatch = useAppDispatch();
-	const isOpen = useAppSelector(selectIsOpen);
-	const idToEdit = useAppSelector(selectIdToEdit);
-	const { pathname } = useLocation();
-	const toggle = React.useCallback(() => dispatch(toggleIsOpen()), []);
+	const { idToEdit, toggleAdminEditModal, adminEditModalIsOpen, typeToEdit } = useAdminEditModalHook();
 	return (
-		<Modal isOpen={isOpen} toggle={toggle} size='xl'>
+		<Modal isOpen={adminEditModalIsOpen} toggle={toggleAdminEditModal} size='xl'>
 			{/* Open the modal corresponding to the current page */}
-			{pathname === '/meters/admin' && <EditMeterModalComponent meterId={idToEdit} />}
-			{pathname === '/maps' && <MapEditModalComponent />}
+			{typeToEdit === EntityType.METER && <EditMeterModalComponent meterId={idToEdit} />}
+			{typeToEdit === EntityType.UNIT && <EditUnitModalComponent unitId={idToEdit} />}
+			{typeToEdit === EntityType.MAP && <MapEditModalComponent id={idToEdit} />}
+			{typeToEdit === EntityType.CONVERSION && <EditConversionModalComponent id={idToEdit} />}
 		</Modal>
 	);
 };

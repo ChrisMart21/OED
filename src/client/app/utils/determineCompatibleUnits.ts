@@ -9,11 +9,12 @@ import React from 'react';
 import { selectCik } from '../redux/api/conversionsApi';
 import { selectAllGroups, selectGroupDataById } from '../redux/api/groupsApi';
 import { selectAllMeters, selectMeterDataById } from '../redux/api/metersApi';
-import { createAutoTrackAppSelector } from '../redux/selectors/selectors';
+import { createAutoTrackAppSelector, createAutoTrackSelector } from '../redux/selectors/selectors';
 import { store } from '../store';
 import { DataType } from '../types/Datasources';
 import { SelectOption } from '../types/items';
 import { GroupData } from '../types/redux/groups';
+import { AreaUnitType } from './getAreaUnitConversion';
 
 /**
  * The intersect operation of two sets.
@@ -218,6 +219,7 @@ export const selectMeterGroupMenuOptionsForGroup = createAutoTrackAppSelector(
  * @returns The current meter options for this group.
  */
 export function getMeterMenuOptionsForGroup(defaultGraphicUnit: number, deepMeters: number[] = []): SelectOption[] {
+	// TODO Deprecate
 	// deepMeters has a default value since it is optional for the type of state but it should always be set in the code.
 	const state = store.getState();
 	// Get the currentGroup's compatible units. We need to use the current deep meters to get it right.
@@ -401,3 +403,17 @@ function getMenuOptionFont(compatibilityChangeCase: GroupCase): React.CSSPropert
 			return {};
 	}
 }
+
+
+// TODO TestSelector.
+//TODO relocate?
+export const selectIsValidGroup = createAutoTrackSelector(
+	(data: GroupData) => data,
+	groupData => {
+		const { area, areaUnit, name, deepMeters } = groupData;
+		console.log('Running Auto Track!');
+		return name !== '' &&
+			(area === 0 || (area > 0 && areaUnit !== AreaUnitType.none)) &&
+			(deepMeters.length > 0);
+	}
+);

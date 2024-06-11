@@ -3,14 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createSelector } from '@reduxjs/toolkit';
+import { RootState } from 'store';
+import { ConversionDataState, ConversionDataWithIds, conversionsAdapter, conversionsInitialState } from '../../redux/entityAdapters';
+import { CikData } from '../../types/redux/ciks';
 import { ConversionData } from '../../types/redux/conversions';
 import { baseApi } from './baseApi';
-import { CikData } from '../../types/redux/ciks';
 
+// Conversions are stored in the database as a composite key of source/destination. EntityAdapter requires a unique ID,
+// So Adding the id property as the response's array index
+const formatWithSyntheticIds = (data: ConversionData[]): ConversionDataWithIds[] => data.map((data, index) => ({
+	...data,
+	id: index
+}));
 export const conversionsApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
-		getConversionsDetails: builder.query<ConversionData[], void>({
+		getConversionsDetails: builder.query<ConversionDataState, void>({
 			query: () => 'api/conversions',
+			transformResponse: (response: ConversionData[]) => {
+				// add fake id's on api response.
+				return conversionsAdapter.setAll(conversionsInitialState, formatWithSyntheticIds(response));
+			},
 			providesTags: ['ConversionDetails']
 		}),
 		getCikDetails: builder.query<CikData[], void>({
@@ -33,7 +45,6 @@ export const conversionsApi = baseApi.injectEndpoints({
 							}));
 					});
 			}
-
 		}),
 		deleteConversion: builder.mutation<void, Pick<ConversionData, 'sourceId' | 'destinationId'>>({
 			query: conversion => ({
@@ -89,14 +100,6 @@ export const conversionsApi = baseApi.injectEndpoints({
 	})
 });
 
-export const selectConversionsQueryState = conversionsApi.endpoints.getConversionsDetails.select();
-export const selectConversionsDetails = createSelector(
-	selectConversionsQueryState,
-	({ data: conversionData = [] }) => {
-		return conversionData;
-	}
-);
-
 const selectCikQueryState = conversionsApi.endpoints.getCikDetails.select();
 
 export const selectCik = createSelector(
@@ -107,3 +110,15 @@ export const selectCik = createSelector(
 );
 
 export const stableEmptyConversions: ConversionData[] = [];
+
+export const selectConversionDataResult = conversionsApi.endpoints.getConversionsDetails.select();
+export const selectConversionApiData = (state: RootState) => selectConversionDataResult(state).data ?? conversionsInitialState;
+export const {
+	selectAll: selectAllConversions,
+	selectById: selectConversionById,
+	selectTotal: selectConversionTotal,
+	selectIds: selectConversionIds,
+	selectEntities: selectConversionDataById
+} = conversionsAdapter.getSelectors(selectConversionApiData);
+
+

@@ -5,14 +5,15 @@
 import { parseZone } from 'moment';
 import * as React from 'react';
 import { Button, Card, CardBody, CardImg, CardTitle, Col, Row } from 'reactstrap';
-import { useTranslate } from '../../redux/componentHooks';
-import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
-import { EntityType, openModalWithID, selectEntityDisplayData } from '../../redux/slices/localEditsSlice';
+import { useAdminEditModalHook, useTranslate } from '../../redux/componentHooks';
+import { useAppSelector } from '../../redux/reduxHooks';
+import { EntityType, selectEntityDisplayData } from '../../redux/slices/localEditsSlice';
 
 
 export const MapViewComponent = (props: { id: number; }) => {
-	const dispatch = useAppDispatch();
 	const [mapData] = useAppSelector(state => selectEntityDisplayData(state, { type: EntityType.MAP, id: props.id }));
+	const { openAdminEditModal } = useAdminEditModalHook({ type: EntityType.MAP, id: props.id });
+
 	const translate = useTranslate();
 
 	return (
@@ -42,7 +43,7 @@ export const MapViewComponent = (props: { id: number; }) => {
 				</Row>
 				<Row>
 					<Col>
-						<Button color="secondary" onClick={() => dispatch(openModalWithID(props.id))}>{translate('edit')}</Button>
+						<Button color="secondary" onClick={openAdminEditModal}>{translate('edit')}</Button>
 					</Col>
 				</Row>
 			</CardBody>

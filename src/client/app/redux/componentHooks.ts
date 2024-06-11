@@ -11,10 +11,16 @@ import { selectInitComplete, selectSelectedLanguage } from './slices/appStateSli
 import { selectCurrentUserRole, selectIsAdmin } from './slices/currentUserSlice';
 import {
 	EntityType,
+	LocalEditEntity,
+	openEditModalWithId,
 	removeOneEdit,
+	selectEditModalIsOpen,
+	selectIdToEdit,
 	selectLocalOrServerEntityById,
+	selectTypeToEdit,
 	setOneEdit,
-	SetOneEditAction
+	SetOneEditAction,
+	toggleAdminEditModal
 } from './slices/localEditsSlice';
 
 export const useWaitForInit = () => {
@@ -46,6 +52,22 @@ export const useTranslate = () => {
 	return translate;
 };
 
+export const useAdminEditModalHook = (args?: LocalEditEntity) => {
+	const dispatch = useAppDispatch();
+	const adminEditModalIsOpen = useAppSelector(selectEditModalIsOpen);
+	const idToEdit = useAppSelector(selectIdToEdit);
+	const typeToEdit = useAppSelector(selectTypeToEdit);
+	const toggleEditModal = React.useCallback(() => dispatch(toggleAdminEditModal()), []);
+	const openAdminEditModal = React.useCallback(() => {
+		if (args) {
+			dispatch(openEditModalWithId({ type: args.type, id: args.id }));
+		} else {
+			toggleAdminEditModal();
+		}
+	}, [args]);
+
+	return { openAdminEditModal, adminEditModalIsOpen, idToEdit, typeToEdit, toggleAdminEditModal: toggleEditModal };
+};
 
 // Reusable for admin pages to update local edit state
 // Hook utilzies react.useState then updates redux in after a 1 second pause in updates.
@@ -59,17 +81,21 @@ export const useLocalEditHook = <T extends EntityType>(type: T, id: number, debo
 	// reset react-state
 	const resetData = React.useCallback(() => {
 		setData(cloneDeep(apiData));
+		dispatch(toggleAdminEditModal());
+
 	}, [apiData]);
 
 	const updateLocalEditState = React.useCallback(debounce(
 		(action: SetOneEditAction) => {
 			const { type, data } = action;
-			// reac
-			const differences = !isEqual(apiData, data);
-			if (differences) {
+			// Check if Api Data Differs from react-data
+			const dataEdited = !isEqual(apiData, data);
+			if (dataEdited) {
+				// Check if data mirrors redux state. (do not dispatch if no changes)
+				const localDataSynced = isEqual(localEditData, data);
 				// changes in react state, so update reduux to match
-				dispatch(setOneEdit({ type, data }));
-			} else if (!differences && localEditData) {
+				!localDataSynced && dispatch(setOneEdit({ type, data }));
+			} else if (!dataEdited && localEditData) {
 				// states are equivalent, however redux is  populated, so delete (states match so no edits)
 				dispatch(removeOneEdit({ type, id: data.id }));
 
@@ -86,20 +112,18 @@ export const useLocalEditHook = <T extends EntityType>(type: T, id: number, debo
 
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setData(data => ({ ...data, [e.target.name]: e.target.value }));
+		verifyProperty(e.target.name, data) && setData(data => ({ ...data, [e.target.name]: e.target.value }));
 	};
 
 	const handleBooleanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setData(data => ({ ...data, [e.target.name]: JSON.parse(e.target.value) }));
+		verifyProperty(e.target.name, data) && setData(data => ({ ...data, [e.target.name]: JSON.parse(e.target.value) }));
 	};
 
 	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setData(data => ({ ...data, [e.target.name]: Number(e.target.value) }));
+		verifyProperty(e.target.name, data) && setData(data => ({ ...data, [e.target.name]: Number(e.target.value) }));
 	};
 
-	const handleTimeZoneChange = (timeZone: string) => {
-		setData(data => ({ ...data as any, timeZone }));
-	};
+	const handleTimeZoneChange = (timeZone: string) => { verifyProperty('timeZone', data) && setData(data => ({ ...data as any, timeZone })); };
 
 	const handlers = {
 		handleStringChange,
@@ -108,4 +132,11 @@ export const useLocalEditHook = <T extends EntityType>(type: T, id: number, debo
 		handleTimeZoneChange
 	};
 	return { handlers, data, setData, resetData, apiData };
+};
+const verifyProperty = (key: string, data: any) => {
+	if (key in data) {
+		return true;
+	} else {
+		throw ('Attempting to Set non-existent Poperty In Data Type');
+	}
 };

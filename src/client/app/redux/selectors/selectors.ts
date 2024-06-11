@@ -12,3 +12,6 @@ export const createAppSelector = createSelector.withTypes<RootState>();
 export const createAutoTrackAppSelector = createSelectorCreator({
 	memoize: unstable_autotrackMemoize
 }).withTypes<RootState>();
+export const createAutoTrackSelector = createSelectorCreator({
+	memoize: unstable_autotrackMemoize
+});

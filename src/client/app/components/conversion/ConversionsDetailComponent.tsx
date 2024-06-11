@@ -4,15 +4,16 @@
 
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
+import { conversionsApi, selectAllConversions } from '../../redux/api/conversionsApi';
+import { stableEmptyUnitDataById, unitsApi } from '../../redux/api/unitsApi';
+import { unitsAdapter } from '../../redux/entityAdapters';
+import { useAppSelector } from '../../redux/reduxHooks';
+import { ConversionData } from '../../types/redux/conversions';
 import SpinnerComponent from '../SpinnerComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
-import { conversionsApi, stableEmptyConversions } from '../../redux/api/conversionsApi';
-import { stableEmptyUnitDataById, unitsApi } from '../../redux/api/unitsApi';
-import { ConversionData } from '../../types/redux/conversions';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import ConversionViewComponent from './ConversionViewComponent';
 import CreateConversionModalComponent from './CreateConversionModalComponent';
-import { unitsAdapter } from '../../redux/entityAdapters';
 
 /**
  * Defines the conversions page card view
@@ -20,9 +21,10 @@ import { unitsAdapter } from '../../redux/entityAdapters';
  */
 export default function ConversionsDetailComponent() {
 	// The route stops you from getting to this page if not an admin.
-
 	// Conversions state
-	const { data: conversionsState = stableEmptyConversions, isFetching: conversionsFetching } = conversionsApi.useGetConversionsDetailsQuery();
+	// const { data: conversionsState = stableEmptyConversions, isFetching: conversionsFetching } = conversionsApi.useGetConversionsDetailsQuery();
+	const conversionsState = useAppSelector(selectAllConversions);
+	const { isFetching: conversionsFetching } = conversionsApi.useGetConversionsDetailsQuery();
 	// Units DataById
 	const { unitDataById = stableEmptyUnitDataById, isFetching: unitsFetching } = unitsApi.useGetUnitsDetailsQuery(undefined, {
 		selectFromResult: ({ data, ...result }) => ({
@@ -75,7 +77,7 @@ export default function ConversionsDetailComponent() {
 												(unitDataById[conversionA.sourceId]?.identifier + unitDataById[conversionA.destinationId]?.identifier).toLowerCase()) ? -1 : 0))
 									.map(conversionData => (
 										<ConversionViewComponent
-											conversion={conversionData}
+											id={conversionData.id}
 											key={conversionData?.sourceId + '>' + conversionData?.destinationId}
 										/>
 									))}

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { selectConversionsDetails } from '../../redux/api/conversionsApi';
+import { selectAllConversions } from '../../redux/api/conversionsApi';
 import { selectGroupById } from '../../redux/api/groupsApi';
 import { metersApi, selectMeterById } from '../../redux/api/metersApi';
 import { readingsApi } from '../../redux/api/readingsApi';
@@ -125,7 +125,7 @@ export const exportRawReadings = createAppThunk(
 		const timeInterval = selectQueryTimeInterval(state);
 		const adminState = selectAdminState(state);
 		const { meterDataById, compatibleEntities } = selectPlotlyMeterDeps(state);
-		const conversionState = selectConversionsDetails(state);
+		const conversionState = selectAllConversions(state);
 		const unitsDataById = selectUnitDataById(state);
 		// Function to export raw readings of graphic data shown.
 		// Get the total number of readings for all meters so can warn user if large.

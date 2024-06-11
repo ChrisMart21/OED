@@ -4,10 +4,9 @@
 
 import * as _ from 'lodash';
 import * as moment from 'moment';
-import { selectConversionsDetails } from '../../redux/api/conversionsApi';
+import { selectAllConversions } from '../../redux/api/conversionsApi';
 import { selectAllGroups } from '../../redux/api/groupsApi';
 import { selectAllMeters, selectMeterById } from '../../redux/api/metersApi';
-import { selectAdminPreferences } from '../slices/adminPreferenceSlice';
 import { ConversionData } from '../../types/redux/conversions';
 import { MeterData, MeterTimeSortType } from '../../types/redux/meters';
 import { UnitData, UnitType } from '../../types/redux/units';
@@ -16,6 +15,7 @@ import { AreaUnitType } from '../../utils/getAreaUnitConversion';
 import { noUnitTranslated, potentialGraphicUnits } from '../../utils/input';
 import translate from '../../utils/translate';
 import { selectAllUnits, selectUnitDataById } from '../api/unitsApi';
+import { selectAdminPreferences } from '../slices/adminPreferenceSlice';
 import { selectVisibleMetersAndGroups } from './authVisibilitySelectors';
 import { createAppSelector } from './selectors';
 
@@ -202,7 +202,7 @@ export const selectCreateMeterUnitCompatibility = createAppSelector(
 export const selectIsValidConversion = createAppSelector(
 	[
 		selectUnitDataById,
-		selectConversionsDetails,
+		selectAllConversions,
 		(_state, conversionDetails: ConversionData) => conversionDetails.sourceId,
 		(_state, conversionDetails: ConversionData) => conversionDetails.destinationId,
 		(_state, conversionDetails: ConversionData) => conversionDetails.bidirectional

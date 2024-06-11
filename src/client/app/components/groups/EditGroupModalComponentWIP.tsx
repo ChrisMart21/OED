@@ -30,6 +30,7 @@ import { GPSPoint, isValidGPSInput } from '../../utils/calibration';
 import {
 	GroupCase,
 	getCompatibilityChangeCase,
+	selectIsValidGroup,
 	selectMeterGroupMenuOptionsForGroup,
 	unitsCompatibleWithMeters
 } from '../../utils/determineCompatibleUnits';
@@ -67,6 +68,9 @@ export default function EditGroupModalComponent(props: EditGroupModalComponentPr
 	// Group state used on other pages
 	const groupDataById = useAppSelector(selectGroupDataById);
 	const possibleGraphicUnits = useAppSelector(selectPossibleGraphicUnits);
+	// TODO REFACTOR COMPONENT USING THUNKS
+	const [editGroupsState, setEditGroupsState] = useState(_.cloneDeep(groupDataById));
+
 
 	// The current groups state of group being edited of the local copy. It should always be valid.
 	// const groupState = editGroupsState[props.groupId];
@@ -96,6 +100,8 @@ export default function EditGroupModalComponent(props: EditGroupModalComponentPr
 		Group must have at least one child (i.e has deep child meters)
 	*/
 	const [validGroup, setValidGroup] = useState(false);
+	const isValidGroup = selectIsValidGroup(groupState);
+	console.log(validGroup === isValidGroup, 'validGroup', validGroup, 'isValidGroup', isValidGroup);
 	useEffect(() => {
 		setValidGroup(
 			groupState.name !== '' &&
@@ -338,16 +344,17 @@ export default function EditGroupModalComponent(props: EditGroupModalComponentPr
 		tooltipEditGroupView: loggedInAsAdmin ? 'help.admin.groupedit' : 'help.groups.groupdetails'
 	};
 
-	return (
+	return (showDeleteConfirmationModal ?
+		// Return confirmation body, avoids doubleModal
+		<ConfirmActionModalComponent
+			actionConfirmMessage={deleteConfirmationMessage}
+			handleClose={handleDeleteConfirmationModalClose}
+			actionFunction={handleDeleteGroup}
+			actionConfirmText={deleteConfirmText}
+			actionRejectText={deleteRejectText} />
+		:
 		<>
 			{/* This is for the modal for delete. */}
-			<ConfirmActionModalComponent
-				show={showDeleteConfirmationModal}
-				actionConfirmMessage={deleteConfirmationMessage}
-				handleClose={handleDeleteConfirmationModalClose}
-				actionFunction={handleDeleteGroup}
-				actionConfirmText={deleteConfirmText}
-				actionRejectText={deleteRejectText} />
 			<Modal isOpen={props.show} toggle={props.handleClose} size={loggedInAsAdmin ? 'lg' : 'md'}>
 				{/* In a number of the items that follow, what is shown varies on whether you are an admin. */}
 				<ModalHeader>

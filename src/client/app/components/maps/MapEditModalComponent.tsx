@@ -3,22 +3,21 @@ import { FormattedMessage } from 'react-intl';
 import { Col, FormGroup, Input, Label, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import TooltipHelpComponent from '../../components/TooltipHelpComponent';
 import { useLocalEditHook, useTranslate } from '../../redux/componentHooks';
-import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
-import { EntityType, selectIdToEdit, toggleIsOpen } from '../../redux/slices/localEditsSlice';
+import { useAppDispatch } from '../../redux/reduxHooks';
+import { EntityType, toggleAdminEditModal } from '../../redux/slices/localEditsSlice';
 
 
-const MapEditModalComponent = () => {
+const MapEditModalComponent = (props: { id: number }) => {
 	const dispatch = useAppDispatch();
 	const translate = useTranslate();
-	const toggleModal = React.useCallback(() => dispatch(toggleIsOpen()), []);
-	const idToEdit = useAppSelector(selectIdToEdit);
+	const toggleModal = React.useCallback(() => dispatch(toggleAdminEditModal()), []);
 	const {
 		data: mapData,
 		handlers: {
 			handleNumberChange,
 			handleStringChange
 		}
-	} = useLocalEditHook(EntityType.MAP, idToEdit);
+	} = useLocalEditHook(EntityType.MAP, props.id);
 	return (
 		<>
 			<ModalHeader toggle={toggleModal}>

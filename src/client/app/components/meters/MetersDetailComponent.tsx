@@ -19,9 +19,6 @@ import MeterViewComponent from './MeterViewComponent';
  * @returns Meters page element
  */
 export default function MetersDetailComponent() {
-
-
-
 	// Check for admin status
 	const isAdmin = useAppSelector(selectIsAdmin);
 	const { pathname } = useLocation();

@@ -38,7 +38,7 @@ import { AreaUnitType, getAreaUnitConversion } from '../../utils/getAreaUnitConv
 import { getGPSString, nullToEmptyString } from '../../utils/input';
 import { showErrorNotification } from '../../utils/notifications';
 import translate from '../../utils/translate';
-import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
+import { ConfirmActionModalBodyComponent } from '../ConfirmActionModalComponent';
 import ListDisplayComponent from '../ListDisplayComponent';
 import MultiSelectComponent from '../MultiSelectComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
@@ -346,7 +346,7 @@ export default function EditGroupModalComponent(props: EditGroupModalComponentPr
 
 	return (showDeleteConfirmationModal ?
 		// Return confirmation body, avoids doubleModal
-		<ConfirmActionModalComponent
+		<ConfirmActionModalBodyComponent
 			actionConfirmMessage={deleteConfirmationMessage}
 			handleClose={handleDeleteConfirmationModalClose}
 			actionFunction={handleDeleteGroup}

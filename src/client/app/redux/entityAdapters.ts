@@ -31,12 +31,12 @@ export const mapsInitialState = mapsAdapter.getInitialState();
 export type MapDataState = EntityState<MapMetadata, number>;
 
 // Conversions
-// Extending conversion data to add an id number,
-// This is exclusively for the front end to take advantage of the entity adapter and its derived selectors.
+// Extending conversion data to add an id number
 // Conversions are stored in the database as a composite key of source/destination. EntityAdapter requires a unique ID,
+export type ConversionDataWithIds = ConversionData & { id: number };
+// This is exclusively for the front end to take advantage of the entity adapter and its derived selectors.
 // So Adding the id property as the response's array index
 // Will not impact backend/server
-export type ConversionDataWithIds = ConversionData & { id: number };
 // Conversions sorts using unitData values, which is not possible with entity adapters so sort by synthetic id
 // Will have to sort by 'id' (default, no sort comparer)
 export const conversionsAdapter = createEntityAdapter<ConversionDataWithIds>();

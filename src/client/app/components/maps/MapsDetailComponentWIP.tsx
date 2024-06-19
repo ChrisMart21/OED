@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from 'reactstrap';
 import { selectMapIds } from '../../redux/api/mapsApi';
 import { useAppSelector } from '../../redux/reduxHooks';
@@ -20,6 +20,7 @@ import { MapViewComponent } from './MapViewComponentWIP';
 export default function MapsDetailComponent() {
 	// const dispatch = useAppDispatch();
 	const mapIds = useAppSelector(selectMapIds);
+	const nav = useNavigate();
 
 	return (
 		<>
@@ -32,12 +33,14 @@ export default function MapsDetailComponent() {
 							<TooltipMarkerComponent page='maps' helpTextId='help.admin.mapview' />
 						</div>
 					</h2>
-					<Link to='/calibration'
-						onClick={() => console.log('implement me.')}>
-						<Button style={buttonContainerStyle} color='primary'>
-							<FormattedMessage id='create.map' />
-						</Button>
-					</Link>
+					<Button style={buttonContainerStyle} color='primary'
+						onClick={() => {
+							console.log('Naving to /maps/calibration!');
+							nav('/maps/calibration');
+						}}
+					>
+						<FormattedMessage id='create.map' />
+					</Button>
 					<Button
 						color='success'
 						style={buttonContainerStyle}

@@ -5,7 +5,6 @@ import * as React from 'react';
 import { IntlProvider } from 'react-intl';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import UploadCSVContainer from '../containers/csv/UploadCSVContainer';
-import MapCalibrationContainer from '../containers/maps/MapCalibrationContainer';
 import { useAppSelector } from '../redux/reduxHooks';
 import { selectSelectedLanguage } from '../redux/slices/appStateSlice';
 import LocaleTranslationData from '../translations/data';
@@ -18,6 +17,7 @@ import CreateUserComponent from './admin/CreateUserComponent';
 import UsersDetailComponent from './admin/UsersDetailComponent';
 import ConversionsDetailComponent from './conversion/ConversionsDetailComponent';
 import GroupsDetailComponent from './groups/GroupsDetailComponent';
+import MapCalibrationComponent from './maps/MapCalibrationComponentWIP';
 import MapsDetailComponent from './maps/MapsDetailComponentWIP';
 import MetersDetailComponent from './meters/MetersDetailComponent';
 import AdminOutlet from './router/AdminOutlet';
@@ -57,13 +57,12 @@ const router = createBrowserRouter([
 					{ path: 'meters/admin', element: <MetersDetailComponent /> },
 					{ path: 'groups/admin', element: <GroupsDetailComponent /> },
 					{ path: 'admin', element: <AdminComponent /> },
-					{ path: 'calibration', element: <MapCalibrationContainer /> },
-					// { path: 'maps', element: <MapsDetailContainer /> },
-					{ path: 'maps', element: <MapsDetailComponent /> },
 					{ path: 'users/new', element: <CreateUserComponent /> },
 					{ path: 'units', element: <UnitsDetailComponent /> },
 					{ path: 'conversions', element: <ConversionsDetailComponent /> },
-					{ path: 'users', element: <UsersDetailComponent /> }
+					{ path: 'users', element: <UsersDetailComponent /> },
+					{ path: 'maps', element: <MapsDetailComponent /> },
+					{ path: 'maps/calibration', element: <MapCalibrationComponent /> }
 				]
 			},
 			{

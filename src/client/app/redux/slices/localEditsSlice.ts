@@ -1,8 +1,9 @@
-import { createEntityAdapter } from '@reduxjs/toolkit';
+import { createEntityAdapter, EntityState } from '@reduxjs/toolkit';
 import { GroupData } from 'types/redux/groups';
-import { MapMetadata } from 'types/redux/map';
+import { MapMetadata, MapState } from 'types/redux/map';
 import { MeterData } from 'types/redux/meters';
 import { UnitData } from 'types/redux/units';
+import { selectConversionApiData } from '../../redux/api/conversionsApi';
 import { selectGroupApiData } from '../../redux/api/groupsApi';
 import { selectMapApiData } from '../../redux/api/mapsApi';
 import { selectMeterApiData } from '../../redux/api/metersApi';
@@ -23,7 +24,6 @@ import {
 	UnitDataState,
 	unitsInitialState
 } from '../entityAdapters';
-import { selectConversionApiData } from '../../redux/api/conversionsApi';
 
 
 // TODO revisit the typing of localEdits (slice,selector, overall approach?) to properly infer arguments and results
@@ -39,6 +39,7 @@ export type EntityTypeMap = {
 }
 // Generic to be used with EntityTypeEnum to
 export type EntityDataType<T extends EntityType = EntityType> = T extends keyof EntityTypeMap ? EntityTypeMap[T] : never;
+export type EntityStateData<T extends EntityType = EntityType> = T extends keyof EntityTypeMap ? EntityState<EntityDataType<T>, number> : never;
 export type SetOneEditAction<T extends EntityType = EntityType> = { type: T, data: EntityDataType<T> };
 export type LocalEditEntity<T extends EntityType = EntityType> = { type: T; id: number };
 
@@ -55,6 +56,7 @@ interface LocalEditsState {
 	units: UnitDataState;
 	maps: MapDataState;
 	conversions: ConversionDataState;
+	mapCalibration: MapState;
 }
 const initialState: LocalEditsState = {
 	typeToEdt: undefined,
@@ -64,7 +66,19 @@ const initialState: LocalEditsState = {
 	groups: groupsInitialState,
 	units: unitsInitialState,
 	maps: mapsInitialState,
-	conversions: conversionsInitialState
+	conversions: conversionsInitialState,
+	mapCalibration: {
+		// Copied over from maps reducer for simplicity trim as we go
+		// Many fields will not be necessary like isLodaing, perhaps others, unsure...
+		isLoading: false,
+		byMapID: {},
+		selectedMap: 0,
+		calibratingMap: 0,
+		editedMaps: {},
+		submitting: [],
+		newMapCounter: 0,
+		calibrationSettings: { showGrid: false }
+	}
 };
 
 // Slice is used to track local admin edits to avoid using useState, and to avoid altering the server response data
@@ -87,11 +101,11 @@ export const localEditsSlice = createThunkSlice({
 			state.isOpen = true;
 		}),
 		setOneEdit: create.reducer<SetOneEditAction>((state, { payload: { type, data } }) => {
-			const cacheEntry = localEditsSlice.getSelectors().selectEditCacheByType(state, type);
+			const cacheEntry = localEditsSlice.getSelectors().selectCacheByType(state, type);
 			localEditAdapter.setOne(cacheEntry, data);
 		}),
 		removeOneEdit: create.reducer<LocalEditEntity>((state, { payload: { type, id } }) => {
-			const cacheEntry = localEditsSlice.getSelectors().selectEditCacheByType(state, type);
+			const cacheEntry = localEditsSlice.getSelectors().selectCacheByType(state, type);
 			localEditAdapter.removeOne(cacheEntry, id);
 
 		})
@@ -100,7 +114,7 @@ export const localEditsSlice = createThunkSlice({
 		selectIdToEdit: state => state.idToEdit,
 		selectTypeToEdit: state => state.typeToEdt,
 		selectEditModalIsOpen: state => state.isOpen,
-		selectEditCacheByType: (state, type: EntityType) => {
+		selectCacheByType: (state, type: EntityType) => {
 			switch (type) {
 				case EntityType.METER:
 					return state.meters;
@@ -116,35 +130,46 @@ export const localEditsSlice = createThunkSlice({
 					return type as never;
 				}
 			}
-		}
+		},
+		selectCalibrationMapId: state => state.mapCalibration.calibratingMap
 	}
 });
 
-export const { selectEditCacheByType } = localEditsSlice.selectors;
+// export const { selectCacheByType: selectEditCacheByType } = localEditsSlice.selectors;
 export const {
 	toggleAdminEditModal, setIdToEdit,
 	openEditModalWithId, setOneEdit, removeOneEdit
 } = localEditsSlice.actions;
-export const { selectIdToEdit, selectEditModalIsOpen, selectTypeToEdit } = localEditsSlice.selectors;
+export const {
+	selectIdToEdit, selectEditModalIsOpen,
+	selectTypeToEdit, selectCalibrationMapId
+} = localEditsSlice.selectors;
 
 
 // utilize api selectors to get api cache entries.
-export const selectApiCacheByType = (state: RootState, type: EntityType) => {
+export const selectApiCacheByType = <T extends EntityType = EntityType>(state: RootState, type: T) => {
+	let cache;
 	switch (type) {
 		case EntityType.METER:
-			return selectMeterApiData(state);
+			cache = selectMeterApiData(state);
+			break;
 		case EntityType.GROUP:
-			return selectGroupApiData(state);
+			cache = selectGroupApiData(state);
+			break;
 		case EntityType.UNIT:
-			return selectUnitApiData(state);
+			cache = selectUnitApiData(state);
+			break;
 		case EntityType.MAP:
-			return selectMapApiData(state);
+			cache = selectMapApiData(state);
+			break;
 		case EntityType.CONVERSION:
-			return selectConversionApiData(state);
+			cache = selectConversionApiData(state);
+			break;
 		default: {
 			return type as never;
 		}
 	}
+	return cache as EntityStateData<T>;
 };
 export interface LocalOrApiCache<T extends EntityType = EntityType> {
 	type: T;
@@ -154,10 +179,12 @@ export type LocalOrApiEntity<T extends EntityType = EntityType> = LocalOrApiCach
 	id: number
 }
 // SelectCache location either from the rtkQueryCache, or localEdits
-export const selectCacheByType = (state: RootState, args: LocalOrApiCache) => {
+export const selectCacheByType = <T extends EntityType>(state: RootState, args: LocalOrApiCache<T>) => {
 	// When local passed as true uses local edit cache (defaults to false)
 	const { type, local = false } = args;
-	return (local ? selectEditCacheByType(state, type) : selectApiCacheByType(state, type));
+	const localCache = localEditsSlice.selectors.selectCacheByType(state, type);
+	const apiCache = selectApiCacheByType(state, type);
+	return (local ? localCache : apiCache) as EntityStateData<T>;
 };
 
 // Select the desired loccal or server cache then pass the cache to the adapter to retrieve desired id.

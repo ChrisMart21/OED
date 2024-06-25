@@ -30,22 +30,22 @@ interface MapInitiateState {
 
 type MapInitiatePropsWithIntl = MapInitiateProps & WrappedComponentProps;
 
-class MapCalibrationInitiateComponent extends React.Component<MapInitiatePropsWithIntl, MapInitiateState > {
+class MapCalibrationInitiateComponent extends React.Component<MapInitiatePropsWithIntl, MapInitiateState> {
 	private readonly fileInput: any;
 	private notifyBadNumber() {
-		showErrorNotification(`${this.props.intl.formatMessage({id: 'map.bad.number'})}`);
+		showErrorNotification(`${this.props.intl.formatMessage({ id: 'map.bad.number' })}`);
 	}
 	private notifyBadDigit360() {
-		showErrorNotification(`${this.props.intl.formatMessage({id: 'map.bad.digita'})}`);
+		showErrorNotification(`${this.props.intl.formatMessage({ id: 'map.bad.digita' })}`);
 	}
 	private notifyBadDigit0() {
-		showErrorNotification(`${this.props.intl.formatMessage({id: 'map.bad.digitb'})}`);
+		showErrorNotification(`${this.props.intl.formatMessage({ id: 'map.bad.digitb' })}`);
 	}
 	private notifyBadMapLoad() {
-		showErrorNotification(`${this.props.intl.formatMessage({id: 'map.bad.load'})}`);
+		showErrorNotification(`${this.props.intl.formatMessage({ id: 'map.bad.load' })}`);
 	}
 	private notifyBadName() {
-		showErrorNotification(`${this.props.intl.formatMessage({id: 'map.bad.name'})}`);
+		showErrorNotification(`${this.props.intl.formatMessage({ id: 'map.bad.name' })}`);
 	}
 
 	constructor(props: MapInitiatePropsWithIntl) {
@@ -73,22 +73,22 @@ class MapCalibrationInitiateComponent extends React.Component<MapInitiatePropsWi
 			<form onSubmit={this.confirmUpload}>
 				<label>
 					<FormattedMessage id='map.new.upload' />
-					<br/>
+					<br />
 					<input type='file' ref={this.fileInput} />
 				</label>
 				<br />
 				<label>
 					<FormattedMessage id='map.new.name' />
-					<br/>
-					<textarea id={'text'} cols={50} value={this.state.mapName} onChange={this.handleNameInput}/>
+					<br />
+					<textarea id={'text'} cols={50} value={this.state.mapName} onChange={this.handleNameInput} />
 				</label>
-				<br/>
+				<br />
 				<label>
-					<FormattedMessage id='map.new.angle'/>
-					<br/>
-					<input type='text' value={this.state.angle} onChange={this.handleAngleInput}/>
+					<FormattedMessage id='map.new.angle' />
+					<br />
+					<input type='text' value={this.state.angle} onChange={this.handleAngleInput} />
 				</label>
-				<br/>
+				<br />
 				<FormattedMessage id='map.new.submit'>
 					{placeholder => <input type='submit' value={(placeholder !== null && placeholder !== undefined) ? placeholder.toString() : 'undefined'} />}
 				</FormattedMessage>
@@ -102,7 +102,7 @@ class MapCalibrationInitiateComponent extends React.Component<MapInitiatePropsWi
 			if (this.fileInput.current.files.length === 0) {
 				this.notifyBadMapLoad();
 			}
-			else if (this.state.mapName.trim() === '')	{
+			else if (this.state.mapName.trim() === '') {
 				this.notifyBadName();
 			}
 			else {
@@ -138,10 +138,10 @@ class MapCalibrationInitiateComponent extends React.Component<MapInitiatePropsWi
 		event.preventDefault();
 		try {
 			const imageURL = await this.getDataURL();
-			this.setState({filename: this.fileInput.current.files[0].name});
+			this.setState({ filename: this.fileInput.current.files[0].name });
 			const image = new Image();
 			image.src = imageURL;
-			const source: MapMetadata &{image: HTMLImageElement} = {
+			const source: MapMetadata & { image: HTMLImageElement } = {
 				...this.props.map,
 				name: this.state.mapName,
 				filename: this.fileInput.current.files[0].name,

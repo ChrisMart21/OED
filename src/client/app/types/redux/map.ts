@@ -154,17 +154,16 @@ export interface MapMetadata {
 	modifiedDate: string;
 	origin?: GPSPoint;
 	opposite?: GPSPoint;
-	// Migrating away from image in State
 	mapSource: string;
+	northAngle: number;
+	circleSize: number;
 	// image: HTMLImageElement;
 	imgHeight: number;
 	imgWidth: number;
 	calibrationMode?: CalibrationModeTypes;
 	currentPoint?: CalibratedPoint;
-	calibrationSet?: CalibratedPoint[];
+	calibrationSet: CalibratedPoint[];
 	calibrationResult?: CalibrationResult;
-	northAngle: number;
-	circleSize: number;
 }
 
 /**

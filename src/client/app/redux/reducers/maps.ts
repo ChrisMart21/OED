@@ -122,7 +122,7 @@ export default function maps(state = defaultState, action: MapsAction) {
 			const mapToReset = { ...editedMaps[action.mapID] };
 			delete mapToReset.currentPoint;
 			delete mapToReset.calibrationResult;
-			delete mapToReset.calibrationSet;
+			// delete mapToReset.calibrationSet;
 			return {
 				...state,
 				editedMaps: {

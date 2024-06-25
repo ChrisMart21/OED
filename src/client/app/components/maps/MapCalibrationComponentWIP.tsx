@@ -4,8 +4,6 @@
 
 import * as React from 'react';
 import { Navigate } from 'react-router-dom';
-import MapCalibrationInfoDisplayContainer from '../../containers/maps/MapCalibrationInfoDisplayContainer';
-import MapCalibrationInitiateContainer from '../../containers/maps/MapCalibrationInitiateContainer';
 import { useAppSelector } from '../../redux/reduxHooks';
 import {
 	EntityType,
@@ -13,6 +11,12 @@ import {
 	selectEntityDisplayData
 } from '../../redux/slices/localEditsSlice';
 import { CalibrationModeTypes } from '../../types/redux/map';
+import MapCalibrationChartDisplayComponent from './MapCalibrationChartDisplayComponent';
+import MapCalibrationInfoDisplayComponent from './MapCalibrationInfoDisplayComponentWIP';
+import MapCalibrationInitiateComponent from './MapCalibrationInitiateComponentWIP';
+// import MapCalibrationInitiateContainer from '../../containers/maps/MapCalibrationInitiateContainer';
+// import MapCalibrationChartDisplayContainer from '../../containers/maps/MapCalibrationChartDisplayContainer';
+// import MapCalibrationInfoDisplayContainer from '../../containers/maps/MapCalibrationInfoDisplayContainer';
 
 /**
  * @returns Calibration Component corresponding to current step invloved
@@ -21,23 +25,23 @@ export default function MapCalibrationComponent() {
 	const mapToCalibrate = useAppSelector(selectCalibrationMapId);
 	const calibrationMode = useAppSelector(state => {
 		const [data] = selectEntityDisplayData(state, { type: EntityType.MAP, id: mapToCalibrate });
-		console.log('CalibrationMode: ', data?.calibrationMode ?? CalibrationModeTypes.unavailable);
 		return data?.calibrationMode ?? CalibrationModeTypes.unavailable;
 	});
 	if (calibrationMode === CalibrationModeTypes.initiate) {
 		return (
 			<div className='container-fluid'>
-				<MapCalibrationInitiateContainer />
+				{/* <MapCalibrationInitiateContainer /> */}
+				<MapCalibrationInitiateComponent />
 			</div >
 		);
 	} else if (calibrationMode === CalibrationModeTypes.calibrate) {
 		return (
 			<div className='container-fluid'>
 				<div id={'MapCalibrationContainer'}>
-					{/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-					{/* @ts-ignore  */}
-					<MapCalibrationChartDisplayContainer />
-					<MapCalibrationInfoDisplayContainer />
+					{/* <MapCalibrationChartDisplayContainer /> */}
+					{/* <MapCalibrationInfoDisplayContainer /> */}
+					<MapCalibrationChartDisplayComponent />
+					<MapCalibrationInfoDisplayComponent />
 				</div>
 			</div>
 		);

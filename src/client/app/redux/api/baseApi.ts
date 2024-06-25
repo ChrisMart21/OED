@@ -11,7 +11,7 @@ export const baseApi = createApi({
 	reducerPath: 'api',
 	baseQuery: fetchBaseQuery({
 		baseUrl: baseHref,
-		prepareHeaders: (headers, { getState }) => {
+		prepareHeaders: async (headers, { getState }) => {
 			const state = getState() as RootState;
 			// For each api call attempt to set the JWT token in the request header
 			// Token placed in store either on startup after validation, or via credentialed login

@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { currentUserSlice } from '../slices/currentUserSlice';
 import { User } from '../../types/items';
-import { deleteToken, getToken, hasToken } from '../../utils/token';
+import { getToken, hasToken } from '../../utils/token';
+import { currentUserSlice } from '../slices/currentUserSlice';
 import { baseApi } from './baseApi';
 
 type LoginResponse = User & {
@@ -48,7 +48,6 @@ export const authApi = baseApi.injectEndpoints({
 		logout: builder.mutation<null, void>({
 			queryFn: (_, { dispatch }) => {
 				// Opt to use a RTK mutation instead of manually writing a thunk to take advantage mutation invalidations
-				deleteToken();
 				dispatch(currentUserSlice.actions.clearCurrentUser());
 				return { data: null };
 			},

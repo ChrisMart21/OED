@@ -7,7 +7,8 @@ import { FormattedMessage } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import { Button } from 'reactstrap';
 import { selectMapIds } from '../../redux/api/mapsApi';
-import { useAppSelector } from '../../redux/reduxHooks';
+import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
+import { localEditsSlice } from '../../redux/slices/localEditsSlice';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import { MapViewComponent } from './MapViewComponentWIP';
@@ -18,7 +19,7 @@ import { MapViewComponent } from './MapViewComponentWIP';
  * @returns maps detail component
  */
 export default function MapsDetailComponent() {
-	// const dispatch = useAppDispatch();
+	const dispatch = useAppDispatch();
 	const mapIds = useAppSelector(selectMapIds);
 	const nav = useNavigate();
 
@@ -33,9 +34,11 @@ export default function MapsDetailComponent() {
 							<TooltipMarkerComponent page='maps' helpTextId='help.admin.mapview' />
 						</div>
 					</h2>
-					<Button style={buttonContainerStyle} color='primary'
+					<Button
+						style={buttonContainerStyle}
+						color='primary'
 						onClick={() => {
-							console.log('Naving to /maps/calibration!');
+							dispatch(localEditsSlice.actions.createNewMap());
 							nav('/maps/calibration');
 						}}
 					>

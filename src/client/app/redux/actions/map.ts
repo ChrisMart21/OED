@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {ActionType, Dispatch, GetState, Thunk} from '../../types/redux/actions';
+import * as moment from 'moment';
+import { ActionType, Dispatch, GetState, Thunk } from '../../types/redux/actions';
 import * as t from '../../types/redux/map';
-import {CalibrationModeTypes, MapData, MapMetadata} from '../../types/redux/map';
+import { CalibrationModeTypes, MapData, MapMetadata } from '../../types/redux/map';
+import { mapsApi } from '../../utils/api';
 import {
 	calibrate,
 	CalibratedPoint,
@@ -13,13 +15,10 @@ import {
 	Dimensions,
 	GPSPoint
 } from '../../utils/calibration';
-import {State} from '../../types/redux/state';
-import {mapsApi} from '../../utils/api';
-import {showErrorNotification, showSuccessNotification} from '../../utils/notifications';
+import { browserHistory } from '../../utils/history';
+import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import translate from '../../utils/translate';
-import * as moment from 'moment';
-import {browserHistory} from '../../utils/history';
-import {logToServer} from './logs';
+import { logToServer } from './logs';
 
 function requestMapsDetails(): t.RequestMapsDetailsAction {
 	return { type: ActionType.RequestMapsDetails };
@@ -34,7 +33,7 @@ function submitMapEdits(mapID: number): t.SubmitEditedMapAction {
 }
 
 function confirmMapEdits(mapID: number): t.ConfirmEditedMapAction {
-	return { type: ActionType.ConfirmEditedMap, mapID};
+	return { type: ActionType.ConfirmEditedMap, mapID };
 }
 
 export function fetchMapsDetails(): Thunk {
@@ -46,11 +45,11 @@ export function fetchMapsDetails(): Thunk {
 }
 
 export function editMapDetails(map: MapMetadata): t.EditMapDetailsAction {
-	return {type: ActionType.EditMapDetails, map};
+	return { type: ActionType.EditMapDetails, map };
 }
 
 function incrementCounter(): t.IncrementCounterAction {
-	return { type: ActionType.IncrementCounter};
+	return { type: ActionType.IncrementCounter };
 }
 
 export function setNewMap(): Thunk {
@@ -103,7 +102,7 @@ export function dropCalibration(): Thunk {
 }
 
 function resetCalibration(mapToReset: number): t.ResetCalibrationAction {
-	return { type: ActionType.ResetCalibration, mapID: mapToReset};
+	return { type: ActionType.ResetCalibration, mapID: mapToReset };
 }
 
 export function updateMapSource(data: MapMetadata): t.UpdateMapSourceAction {
@@ -144,8 +143,8 @@ export function offerCurrentGPS(currentGPS: GPSPoint): Thunk {
 				dispatch2(logToServer('info', `gps input (lat:${currentGPS.latitude},long:${currentGPS.longitude})
 				provided for cartesian point:${point.cartesian.x},${point.cartesian.y}
 				and added to data point`));
-				if (isReadyForCalculation(getState())) {
-					const result = prepareDataToCalculation(getState());
+				if (isReadyForCalculation(getState().maps.editedMaps[mapID])) {
+					const result = prepareDataToCalculation(getState().maps.editedMaps[mapID]);
 					dispatch2(updateResult(result));
 					dispatch2(logToServer('info', `calculation complete, maxError: x:${result.maxError.x},y:${result.maxError.y},
 					origin:${result.origin.latitude},${result.origin.longitude}, opposite:${result.opposite.latitude},${result.opposite.longitude}`));
@@ -158,52 +157,45 @@ export function offerCurrentGPS(currentGPS: GPSPoint): Thunk {
 	};
 }
 
-function hasCartesian(point: CalibratedPoint) {
+export function hasCartesian(point: CalibratedPoint) {
 	return point.cartesian.x !== -1 && point.cartesian.y !== -1;
 }
 
 function updateCalibrationSet(calibratedPoint: CalibratedPoint): t.AppendCalibrationSetAction {
-	return { type: ActionType.AppendCalibrationSet, calibratedPoint};
+	return { type: ActionType.AppendCalibrationSet, calibratedPoint };
 }
 
 /**
  * use a default number as the threshold in determining if it's safe to call the calibration function
- * @param state The redux state
+ * @param mapData The redux state
  * @returns Result of safety check
  */
-function isReadyForCalculation(state: State): boolean {
+export function isReadyForCalculation(mapData: MapMetadata): boolean {
 	const calibrationThreshold = 3;
-	// assume calibrationSet is defined, as offerCurrentGPS indicates through point that the map is defined.
-	/* eslint-disable @typescript-eslint/no-non-null-assertion */
-	return state.maps.editedMaps[state.maps.calibratingMap].calibrationSet!.length >= calibrationThreshold;
-	/* eslint-enable @typescript-eslint/no-non-null-assertion */
+	return mapData.calibrationSet.length >= calibrationThreshold;
 }
 
 /**
  *  prepare data to required formats to pass it to function calculating mapScales
- * @param state The redux state
+ * @param mapData The redux state
  * @returns Result of map calibration
  */
-function prepareDataToCalculation(state: State): CalibrationResult {
-	const mapID = state.maps.calibratingMap;
-	const mp = state.maps.editedMaps[mapID] as MapMetadata &{image: HTMLImageElement};
+export function prepareDataToCalculation(mapData: MapMetadata): CalibrationResult {
 	const imageDimensions: Dimensions = {
-		width: mp.image.width,
-		height: mp.image.height
+		width: mapData.imgWidth,
+		height: mapData.imgHeight
 	};
 	// Since mp is defined above, calibrationSet is defined.
-	/* eslint-disable @typescript-eslint/no-non-null-assertion */
-	const result = calibrate(mp.calibrationSet!, imageDimensions, mp.northAngle);
+	const result = calibrate(mapData.calibrationSet, imageDimensions, mapData.northAngle);
 	return result;
-	/* eslint-enable @typescript-eslint/no-non-null-assertion */
 }
 
 function updateResult(result: CalibrationResult): t.UpdateCalibrationResultAction {
-	return { type: ActionType.UpdateCalibrationResults, result};
+	return { type: ActionType.UpdateCalibrationResults, result };
 }
 
 export function resetCurrentPoint(): t.ResetCurrentPointAction {
-	return { type: ActionType.ResetCurrentPoint } ;
+	return { type: ActionType.ResetCurrentPoint };
 }
 
 export function submitEditedMaps(): Thunk {
@@ -234,7 +226,7 @@ export function submitCalibratingMap(): Thunk {
 export function submitNewMap(): Thunk {
 	return async (dispatch: Dispatch, getState: GetState) => {
 		const mapID = getState().maps.calibratingMap;
-		const map = getState().maps.editedMaps[mapID] as MapMetadata &{image: HTMLImageElement};
+		const map = getState().maps.editedMaps[mapID] as MapMetadata & { image: HTMLImageElement };
 		try {
 			const acceptableMap: MapData = {
 				...map,
@@ -267,7 +259,7 @@ export function submitNewMap(): Thunk {
  */
 export function submitEditedMap(mapID: number): Thunk {
 	return async (dispatch: Dispatch, getState: GetState) => {
-		const map = getState().maps.editedMaps[mapID] as MapMetadata &{image: HTMLImageElement};
+		const map = getState().maps.editedMaps[mapID] as MapMetadata & { image: HTMLImageElement };
 		dispatch(submitMapEdits(mapID));
 		try {
 			const acceptableMap: MapData = {

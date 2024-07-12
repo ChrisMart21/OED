@@ -14,18 +14,11 @@ import '../../styles/card-page.css';
 
 interface MapsDetailProps {
 	maps: number[];
-	unsavedChanges: boolean;
 	fetchMapsDetails(): Promise<any>;
-	submitEditedMaps(): Promise<any>;
 	createNewMap(): any;
 }
 
 export default class MapsDetailComponent extends React.Component<MapsDetailProps> {
-	constructor(props: MapsDetailProps) {
-		super(props);
-		this.handleSubmitClicked = this.handleSubmitClicked.bind(this);
-	}
-
 	public componentDidMount() {
 		this.props.fetchMapsDetails();
 	}
@@ -53,26 +46,9 @@ export default class MapsDetailComponent extends React.Component<MapsDetailProps
 							<MapViewContainer key={mapID} id={mapID} />
 						))}
 					</div>
-					{hasToken() && (
-						<div className="edit-btn">
-							<Button
-								color='success'
-								disabled={!this.props.unsavedChanges}
-								onClick={this.handleSubmitClicked}
-							>
-								<FormattedMessage id='save.map.edits' />
-							</Button>
-						</div>
-					)}
 				</div>
 			</div>
 		);
-	}
-
-	private handleSubmitClicked() {
-		this.props.submitEditedMaps();
-		// Notify that the unsaved changes have been submitted
-		// this.removeUnsavedChanges();
 	}
 }
 

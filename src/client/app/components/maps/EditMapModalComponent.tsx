@@ -137,7 +137,7 @@ function EditMapModalComponent(props: EditMapModalProps) {
 					<FormattedMessage id="cancel" />
 				</Button>
 				<Button color="primary" onClick={handleSave}>
-					<FormattedMessage id="done.editing" />
+					<FormattedMessage id="save.map.edits" />
 				</Button>
 			</ModalFooter>
 		</Modal>

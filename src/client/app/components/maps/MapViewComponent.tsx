@@ -12,76 +12,38 @@ import { CalibrationModeTypes, MapMetadata } from '../../types/redux/map';
 import { hasToken } from '../../utils/token';
 import { showErrorNotification } from '../../utils/notifications';
 import '../../styles/card-page.css';
-//import { useAppDispatch } from '../../redux/reduxHooks';
-//import { confirmEditedMaps, fetchMapsDetails, submitEditedMaps } from '../../redux/slices/mapSlice';
-//import { updateUnsavedChanges } from '../../redux/slices/unsavedWarningSlice';
 import EditMapModalComponent from './EditMapModalComponent';
 
-// TODO: create mapSlice and unsavedWarningSlice and properly set up in the Redux store
-// with all necessary actions (confirmEditedMaps, fetchMapsDetails, submitEditedMaps, updateUnsavedChanges)
-// correctly implemented in their respective slices.
 
 interface MapViewProps {
 	id: number;
 	map: MapMetadata;
-	isEdited: boolean;
-	isSubmitting: boolean;
-	editMapDetails(map: MapMetadata): any;
 	setCalibration(mode: CalibrationModeTypes, mapID: number): any;
 	removeMap(id: number): any;
+	editMapDetails(map: MapMetadata): any;
 }
 
-function MapViewComponent(props: MapViewProps) {
+/**
+ * Defines the map info card
+ * @param props variables passed in to define
+ * @returns Map info card element
+ */
+function MapViewComponent(props: MapViewProps): React.JSX.Element {
 	const [showEditModal, setShowEditModal] = useState(false);
-	//const dispatch = useAppDispatch();
 	const intl = useIntl();
-
-	useEffect(() => {
-		if (props.isEdited) {
-			//updateUnsavedChanges();
-		}
-	}, [props.isEdited]);
-
-	/*
-	// Function to remove unsaved changes
-	const removeUnsavedChangesFunction = async (callback: () => void) => {
-		// Dispatch action to confirm edited maps
-		await dispatch(confirmEditedMaps());
-		// Fetch updated map details
-		await dispatch(fetchMapsDetails());
-		callback();
-	};
-
-	// Function to submit unsaved changes
-	const submitUnsavedChangesFunction = async (successCallback: () => void, failureCallback: () => void) => {
-		try {
-			// Dispatch action to submit edited maps
-			await dispatch(submitEditedMaps());
-			// Call success callback if submission is successful
-			successCallback();
-		} catch (error) {
-			// Call failure callback if submission fails
-			failureCallback();
-		}
-	};
-
-	// Function to update unsaved changes
-	const updateUnsavedChanges = () => {
-	// Dispatch action to update unsaved changes with remove and submit functions
-		dispatch(updateUnsavedChanges({
-			removeFunction: removeUnsavedChangesFunction,
-			submitFunction: submitUnsavedChangesFunction
-		}));
-	};
-	*/
 
 	const handleShowModal = () => setShowEditModal(true);
 	const handleCloseModal = () => setShowEditModal(false);
 
+	const handleSave = (updatedMap: MapMetadata) => {
+		props.editMapDetails(updatedMap);
+		handleCloseModal();
+	};
+
 	return (
 		<div className="map-card">
 			<div className="identifier-container">
-				{props.map.name} {props.isSubmitting ? '(Submitting)' : props.isEdited ? '(Edited)' : ''}
+				{props.map.name}
 			</div>
 			<div className="item-container">
 				<b><FormattedMessage id="map.displayable" /></b>

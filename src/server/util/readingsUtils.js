@@ -37,7 +37,7 @@ async function prepareTest(unitData, conversionData, meterData, groupData = []) 
     const conn = testDB.getConnection();
     await insertUnits(unitData, false, conn);
     await insertConversions(conversionData, conn);
-    await insertMeters(meterData, conn);
+    const result = await insertMeters(meterData, conn);
     await insertGroups(groupData, conn);
     await redoCik(conn);
     await refreshAllReadingViews();
@@ -96,6 +96,21 @@ function expectMaxMinToEqualExpected(res, expected, id = METER_ID) {
         expect(res.body).to.have.property(`${id}`).to.have.property(`${i}`).to.have.property('startTimestamp').to.equal(Date.parse(expected[i][3]));
         expect(res.body).to.have.property(`${id}`).to.have.property(`${i}`).to.have.property('endTimestamp').to.equal(Date.parse(expected[i][4]));
     }
+}
+
+/**
+ * Compares readings from compare api call against the expected readings
+ * @param {request.Response} res the response to the HTTP GET request from Chai
+ * @param {array} expected the returned array from parseExpectedCsv
+ */
+function expectCompareToEqualExpected(res, expected, id = METER_ID) {
+    expect(res).to.be.json;
+    expect(res).to.have.status(HTTP_CODE.OK);
+    // Did the response have the correct meter
+    expect(res.body).to.have.property(`${id}`);
+    // Check that the reading's values (previous value and current value) is within the expected tolerance (DELTA).
+    expect(res.body).to.have.property(`${id}`).to.have.property('curr_use').to.be.closeTo(Number(expected[0]), DELTA);
+    expect(res.body).to.have.property(`${id}`).to.have.property('prev_use').to.be.closeTo(Number(expected[1]), DELTA);
 }
 
 /**
@@ -267,6 +282,7 @@ module.exports = {
     parseExpectedCsv,
     expectReadingToEqualExpected,
     expectMaxMinToEqualExpected,
+    expectCompareToEqualExpected,
     expectThreeDReadingToEqualExpected,
     createTimeString,
     getUnitId,

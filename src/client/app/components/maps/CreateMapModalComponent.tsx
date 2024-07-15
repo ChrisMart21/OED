@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input } from 'reactstrap';
 import { Link } from 'react-router-dom';
-import { CalibrationModeTypes } from '../../types/redux/map';
+import { Button, Form, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
 interface CreateMapModalProps {
 	show: boolean;
@@ -13,6 +12,11 @@ interface CreateMapModalProps {
 
 /**
  *
+ * @param root0 TODO
+ * @param root0.show TODO
+ * @param root0.handleClose TODO
+ * @param root0.createNewMap TODO
+ * @returns TODO
  */
 function CreateMapModalComponent({ show, handleClose, createNewMap }: CreateMapModalProps) {
 	const [nameInput, setNameInput] = useState('');
@@ -36,7 +40,7 @@ function CreateMapModalComponent({ show, handleClose, createNewMap }: CreateMapM
 						<Input
 							id="mapName"
 							value={nameInput}
-							onChange={(e) => setNameInput(e.target.value)}
+							onChange={e => setNameInput(e.target.value)}
 						/>
 					</FormGroup>
 					<FormGroup>
@@ -45,7 +49,7 @@ function CreateMapModalComponent({ show, handleClose, createNewMap }: CreateMapM
 							id="mapNote"
 							type="textarea"
 							value={noteInput}
-							onChange={(e) => setNoteInput(e.target.value)}
+							onChange={e => setNoteInput(e.target.value)}
 						/>
 					</FormGroup>
 				</Form>
@@ -70,3 +74,59 @@ function CreateMapModalComponent({ show, handleClose, createNewMap }: CreateMapM
 }
 
 export default CreateMapModalComponent;
+
+export const CreateMapModalBodyComponent = ({  handleClose, createNewMap }: CreateMapModalProps) => {
+	const [nameInput, setNameInput] = useState('');
+	const [noteInput, setNoteInput] = useState('');
+
+	const handleCreate = () => {
+		// TODO: Implement create functionality
+		createNewMap();
+		handleClose();
+	};
+
+	return (
+		<>
+			<ModalHeader toggle={handleClose}>
+				<FormattedMessage id="create.map" />
+			</ModalHeader>
+			<ModalBody>
+				<Form>
+					<FormGroup>
+						<Label for="mapName"><FormattedMessage id="map.name" /></Label>
+						<Input
+							id="mapName"
+							value={nameInput}
+							onChange={e => setNameInput(e.target.value)}
+						/>
+					</FormGroup>
+					<FormGroup>
+						<Label for="mapNote"><FormattedMessage id="note" /></Label>
+						<Input
+							id="mapNote"
+							type="textarea"
+							value={noteInput}
+							onChange={e => setNoteInput(e.target.value)}
+						/>
+					</FormGroup>
+				</Form>
+				<div>
+					<Link to='/calibration' onClick={() => createNewMap()}>
+						<Button color='primary'>
+							<FormattedMessage id='map.upload.file' />
+						</Button>
+					</Link>
+				</div>
+			</ModalBody>
+			<ModalFooter>
+				<Button color="secondary" onClick={handleClose}>
+					<FormattedMessage id="cancel" />
+				</Button>
+				<Button color="primary" onClick={handleCreate}>
+					<FormattedMessage id="create" />
+				</Button>
+			</ModalFooter>
+		</>
+
+	);
+};

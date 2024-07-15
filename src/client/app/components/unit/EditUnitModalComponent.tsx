@@ -20,7 +20,6 @@ import { TrueFalseType } from '../../types/items';
 import { DisplayableType, UnitRepresentType, UnitType } from '../../types/redux/units';
 import { conversionArrow } from '../../utils/conversionArrow';
 import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
-import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 
 interface EditUnitModalComponentProps {
@@ -55,7 +54,7 @@ export default function EditUnitModalComponent(props: EditUnitModalComponentProp
 	const handleDeleteUnit = () => {
 		// Closes the warning modal
 		// Do not call the handler function because we do not want to open the parent modal
-		setShowDeleteConfirmationModal(false);
+		// setShowDeleteConfirmationModal(false);
 
 		let error_message = '';
 		for (const value of Object.values(meterDataByID)) {

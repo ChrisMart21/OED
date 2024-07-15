@@ -11,7 +11,8 @@ import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
 import { localEditsSlice } from '../../redux/slices/localEditsSlice';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
-import { MapViewComponent } from './MapViewComponentWIP';
+import { MapViewComponentWIP } from './MapViewComponent';
+// import { MapViewComponent } from './MapViewComponentWIP';
 
 
 /**
@@ -50,9 +51,10 @@ export default function MapsDetailComponent() {
 					>
 						<FormattedMessage id='save.map.edits' />
 					</Button>
-					<div style={tableStyle}>
+					<div className="card-container">
 						{
-							mapIds.map(mapID => <MapViewComponent key={mapID} id={mapID} />)
+							// mapIds.map(mapID => <MapViewComponent key={mapID} id={mapID} />)
+							mapIds.map(mapID => <MapViewComponentWIP key={mapID} id={mapID} />)
 						}
 					</div>
 
@@ -67,10 +69,6 @@ const titleStyle: React.CSSProperties = {
 	textAlign: 'center'
 };
 
-const tableStyle: React.CSSProperties = {
-	marginLeft: '5%',
-	marginRight: '5%'
-};
 
 const buttonContainerStyle: React.CSSProperties = {
 	minWidth: '150px',
